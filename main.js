@@ -3,6 +3,7 @@ const electron = require('electron');
 const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
+const config = require('./config.js').options;
 
 const path = require('path');
 const url = require('url');
@@ -27,10 +28,10 @@ if (os.platform() === 'darwin') {
 
 // start wallet daemon
 if (os.platform() === 'win32') {
-    var cmd = 'C:/Program Files (x86)/Zclassic/zcashd.exe';
+    var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : 'C:/Program Files (x86)/Zclassic/zcashd.exe';
 }
 else {
-    var cmd = require('path').dirname(require.main.filename) + '/zcashd-mac';
+    var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : require('path').dirname(require.main.filename) + '/zcashd-mac';
 }
 try {
     var zcashd = spawn(cmd);
@@ -124,7 +125,7 @@ function createWindow () {
     Menu.setApplicationMenu(menu);
 
   // Create the browser window.
-  mainWindow = new BrowserWindow({'minWidth': 780, 'minHeight': 430, 'width': 780, 'height': 430, icon:'resources/zcl-1024.png'});
+  mainWindow = new BrowserWindow({'minWidth': 780, 'minHeight': 430, 'width': 780, 'height': 430, icon:'resources/' + config.coin + '.png'});
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
@@ -134,7 +135,7 @@ function createWindow () {
   }));
 
   // Open the DevTools.
-  //mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -169,8 +170,9 @@ app.on('activate', function () {
 
 app.on('before-quit', function() {
     if (zcashd) {
-        console.log('Killing PID:' + zcashd.pid);
-        zcashd.kill('SIGTERM');
+        console.log('Sending wallet STOP command.');
+        wallet.jsonQuery({'jsonrpc': '1.0', 'id': 'stop', 'method': 'stop', 'params': []},
+            function(text) {console.log(text.result)});
     }
 });
 

@@ -7,8 +7,10 @@ var tableify = require('tableify');
 var txs = [];
 var privTxs = [];
 var memos = [];
-var memosFlag = false; // when true update the memo table
-var tmpSelect = document.createElement('select');
+var transOpts = [];
+var shieldedOpts = [];
+var options = [];
+var oldOptions = [];
 var genHistory = {'transparent': false, 'private': false};
 
 Array.prototype.getRandom = function () {
@@ -53,39 +55,44 @@ function showTxDetails(txid) {
 }
 
 function generateMemoTable (memos) {
-    if (memosFlag === true) {
-        memosFlag = false;
-        memos.sort(function(a, b){ // sort table by date
-            return b.time - a.time;
-        });
-        for (let i = 0; i < memos.length; i++) {
-            memos[i]["details"] = '<a href="javascript:void(0)" onclick="renderer.showTxDetails(\'' + memos[i].txid + '\')">click</a>';
-            let datetime = new Date(memos[i]["time"] * 1000);
-            memos[i]["time"] = datetime.toLocaleTimeString() + " - " + datetime.toLocaleDateString();
-            delete memos[i].txid;
+    let localMemos = memos;
+    localMemos.sort(function(a, b){ // sort table by date
+        if (b.time === a.time) {
+            return b.address - a.address;
         }
-        // build empty table if no results
-        if (memos.length < 1) {
-            memos[0] = {'amount': '', 'address': '', 'memo': '', 'time': '', 'details': ''};
-        }
-        let tableElement = tableify(memos);
-        let div = document.createElement('div');
-        div.innerHTML = tableElement;
-        div.firstElementChild.className += ' w3-table-all w3-tiny';
-        document.getElementById("memoPage").innerHTML = div.innerHTML;
+        return b.time - a.time;
+    });
+    for (let i = 0; i < localMemos.length; i++) {
+        localMemos[i]["details"] = '<a href="javascript:void(0)" onclick="renderer.showTxDetails(\'' + localMemos[i].txid + '\')">click</a>';
+        let datetime = new Date(localMemos[i]["time"] * 1000);
+        localMemos[i]["time"] = datetime.toLocaleTimeString() + " - " + datetime.toLocaleDateString();
+        delete localMemos[i].txid;
     }
+    // build empty table if no results
+    if (localMemos.length < 1) {
+        localMemos[0] = {'amount': '', 'address': '', 'memo': '', 'time': '', 'details': ''};
+    }
+    let tableElement = tableify(localMemos);
+    let div = document.createElement('div');
+    div.innerHTML = tableElement;
+    div.firstElementChild.className += ' w3-table-all w3-tiny';
+    document.getElementById("memoPage").innerHTML = div.innerHTML;
 }
 
 function generateHistoryTable (txs, privTxs) {
     let combinedTxs = [].concat(txs, privTxs);
-    combinedTxs.sort(function(a, b){ // sort table by date
+    combinedTxs.sort(function(a, b){
+        if (b.time === a.time) {
+            return b.address - a.address;
+        }
         return b.time - a.time;
     });
     for (let i = 0; i < privTxs.length; i++) {
         privTxs[i]["address"] = privTxs[i].address.substr(0, 16) + '......' + privTxs[i].address.substr(-16);
     }
+    memos = [];
     for (let i = 0; i < combinedTxs.length; i++) {
-        if (combinedTxs[i].memo) {
+        if (combinedTxs[i].memo && combinedTxs[i].memo.substr(0, 6) !== 'f60000') {
             memos.push({
                 amount: combinedTxs[i].amount,
                 address: combinedTxs[i].address,
@@ -97,10 +104,9 @@ function generateHistoryTable (txs, privTxs) {
         let datetime = new Date(combinedTxs[i]["time"] * 1000);
         combinedTxs[i]["time"] = datetime.toLocaleTimeString() + " - " + datetime.toLocaleDateString();
         combinedTxs[i]["details"] = '<a href="javascript:void(0)" onclick="renderer.showTxDetails(\'' + combinedTxs[i].txid + '\')">click</a>';
-        delete combinedTxs[i].memo;
         delete combinedTxs[i].txid;
+        delete combinedTxs[i].memo;
     }
-    memosFlag = true;
     // build empty table if no results
     if (combinedTxs.length < 1) {
         combinedTxs[0] = {'address': 'No received transactions found', 'amount': 0, 'category': '', 'confirmations': '', 'time': '', 'details': ''};
@@ -117,17 +123,11 @@ function generateHistoryTable (txs, privTxs) {
 
 ipcRenderer.on('jsonQuery-reply', (event, arg) => {
     if (arg.error && arg.error.code === -28) {
-        document.getElementById("alertSpan").innerHTML = '<h2>' + arg.error.message + '</h2>' + '<br />&copy; 2017 zdeveloper.org (a Zclassic project) - Licensed under the Common Public Attribution License';
-        while (true) {
-            let res = generateQuerySync('getinfo', []);
-            if (!res.result.error) {
-                refreshUI();
-                break;
-            }
-        }
+        document.getElementById("alertSpan").innerHTML = '<img src="resources/box.gif" style="display: block; margin: auto; padding-top: 15px;"/><h2 style="text-align: center;">' + arg.error.message + '</h2>';
     }
-
-    document.getElementById("alertSpan").innerHTML = '';
+    else {
+        document.getElementById("alertSpan").innerHTML = '';
+    }
 
     if (arg.id === 'getnetworkinfo') {
         document.getElementById("connectionsValue").innerHTML = arg.result.connections;
@@ -165,7 +165,17 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
                 let option = document.createElement("option");
                 option.text = arg.result[i][n][0] + ' (' + arg.result[i][n][1] + ')';
                 option.value = arg.result[i][n][0];
-                document.getElementById("privateFromSelect").add(option);
+                let pushed = false;
+                for (let x = 0; x < transOpts.length; x++) {
+                    if (transOpts[x].value === option.value) {
+                        transOpts[x] = option;
+                        pushed = true;
+                        break;
+                    }
+                }
+                if (pushed === false) {
+                    transOpts.push(option);
+                }
             }
         }
         // build empty table if no results
@@ -192,7 +202,17 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
                 let option = document.createElement("option");
                 option.text = arg.result[i] + ' (' + res.result + ')';
                 option.value = arg.result[i];
-                document.getElementById("privateFromSelect").add(option);
+                let pushed = false;
+                for (let x = 0; x < shieldedOpts.length; x++) {
+                    if (shieldedOpts[x].value === option.value) {
+                        shieldedOpts[x] = option;
+                        pushed = true;
+                        break;
+                    }
+                }
+                if (pushed === false) {
+                    shieldedOpts.push(option);
+                }
             }
         }
         // build empty table if no results
@@ -229,7 +249,6 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
                 document.getElementById("newTransparentAddress").click();
             }
         }
-        document.getElementById("receivingAddressValue").value = unusedAddresses.getRandom();
     }
     else if (arg.id === 'sendmany') {
         if (arg.result === null) {
@@ -258,8 +277,6 @@ ipcRenderer.on('wallet-auth-error', (event, arg) => {
 });
 
 function refreshUI() {
-    // reset
-    document.getElementById("privateFromSelect").innerHTML = '';
     // for receivePage
     generateQuery('listreceivedbyaddress', [0, true]);
 
@@ -274,6 +291,36 @@ function refreshUI() {
     generateQuery('getnetworkinfo', []);
     generateQuery('getinfo', []);
     generateQuery('z_gettotalbalance', [0]);
+
+
+    //sort collected options
+    options = [].concat(transOpts, shieldedOpts);
+
+
+
+    // update the private send dropdown only if needed
+    var different = false;
+    if (options.length !== oldOptions.length) {
+        different = true;
+    }
+    else if (options.length == oldOptions.length) {
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value !== oldOptions[i].value) {
+                different = true;
+            }
+        }
+        if (!different) return;
+    }
+    if (different && options.length > 0) {
+        document.getElementById("privateFromSelect").innerHTML = '';
+        for (let i = 0; i < options.length; i++) {
+            document.getElementById("privateFromSelect").add(options[i]);
+        }
+        oldOptions = options;
+        options = [];
+        transOpts = [];
+        shieldedOpts = [];
+    }
 }
 
 function pollUI() {
@@ -288,7 +335,7 @@ function pollUI() {
 }
 
 refreshUI();
-setInterval(refreshUI, 16000);
+setInterval(refreshUI, 5500);
 setInterval(pollUI, 400);
 ipcRenderer.send('coin-request'); // get abbreviation for coin
 

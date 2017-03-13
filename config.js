@@ -2,8 +2,14 @@ var options = {
     coin: "ZCL",
     rpcUser: "",
     rpcPass: "",
-    rpcIP: "127.0.0.1",
-    rpcPort: "8133"
+    rpcIP: "",
+    rpcPort: "",
+    binaryPathWin: "",
+    binaryPathMacOS: "",
+    binaryPathLinux: "",
+    confPathWin: "",
+    confPathMacOS: "",
+    confPathLinux: ""
 };
 
 module.exports = { options };
