@@ -1,12 +1,12 @@
 {
   "name": "Eleos",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A minimal Equihash wallet",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
-  "repository": "https://github.com/z-classic/eleos",
+  "repository": "https://github.com/zencashio/eleos",
   "keywords": [
     "zclassic",
     "equihash",
