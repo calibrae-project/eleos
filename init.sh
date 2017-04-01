@@ -15,8 +15,10 @@ SPROUT_PKEY_URL="https://z.cash/downloads/$SPROUT_PKEY_NAME"
 SPROUT_VKEY_URL="https://z.cash/downloads/$SPROUT_VKEY_NAME"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    SHA256CMD="$(command -v shasum -a 256 || echo shasum)"
+    SHA256CMD="$(command -v shasum -a 256 || echo shasum -a 256)"
     SHA256ARGS="$(command -v shasum -a 256 >/dev/null || echo '-a 256')"
+    echo "8bc20a7f013b2b58970cddd2e7ea028975c88ae7ceb9259a5344a16bc2c0eef7  sprout-proving.key.dl" > "${PARAMS_DIR}/sprout-proving.key.sum"
+    echo "4bd498dae0aacfd8e98dc306338d017d9c08dd0918ead18172bd0aec2fc5df82  sprout-verifying.key.dl" > "${PARAMS_DIR}/sprout-verifying.key.sum"
 else
     SHA256CMD="$(command -v sha256sum || echo shasum)"
     SHA256ARGS="$(command -v sha256sum >/dev/null || echo '-a 256')"
@@ -34,7 +36,7 @@ function fetch_params {
         if [[ $(sw_vers -productName) == "Mac OS X" ]]; then
             curl \
                 --output "$dlname" \
-                -# -L -C - \
+                -# -L\
                 "$url"
         else
             wget \
@@ -45,9 +47,13 @@ function fetch_params {
                 "$url"
         fi
 
-        "$SHA256CMD" $SHA256ARGS --check <<EOF
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            "$SHA256CMD" --check "${output}.sum"
+        else
+            "$SHA256CMD" $SHA256ARGS --check <<EOF
 $expectedhash  $dlname
 EOF
+        fi
 
         # Check the exit code of the shasum command:
         CHECKSUM_RESULT=$?
@@ -125,8 +131,8 @@ EOF
 
     cd "$PARAMS_DIR"
 
-    fetch_params "$SPROUT_PKEY_URL" "$PARAMS_DIR/$SPROUT_PKEY_NAME" "8bc20a7f013b2b58970cddd2e7ea028975c88ae7ceb9259a5344a16bc2$
-    fetch_params "$SPROUT_VKEY_URL" "$PARAMS_DIR/$SPROUT_VKEY_NAME" "4bd498dae0aacfd8e98dc306338d017d9c08dd0918ead18172bd0aec2f$
+    fetch_params "$SPROUT_PKEY_URL" "$PARAMS_DIR/$SPROUT_PKEY_NAME" "8bc20a7f013b2b58970cddd2e7ea028975c88ae7ceb9259a5344a16bc2c0eef7"
+    fetch_params "$SPROUT_VKEY_URL" "$PARAMS_DIR/$SPROUT_VKEY_NAME" "4bd498dae0aacfd8e98dc306338d017d9c08dd0918ead18172bd0aec2fc5df82"
 }
 
 main

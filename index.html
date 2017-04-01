@@ -181,6 +181,7 @@
       function sendPrivateTransaction() {
           let from = document.getElementById("privateFromSelect").value;
           let address = document.getElementById("privateSendToValue").value;
+          let amount = Number(document.getElementById("privateAmountValue").value);
           if (document.getElementById("privateMemoValue").value.length === 0) {
               renderer.generateQuery('z_sendmany', [from, [{'address': address, 'amount': amount}]]);
           }

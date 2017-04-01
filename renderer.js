@@ -168,12 +168,17 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
                 let pushed = false;
                 for (let x = 0; x < transOpts.length; x++) {
                     if (transOpts[x].value === option.value) {
-                        transOpts[x] = option;
-                        pushed = true;
+                        if (arg.result[i][n][1] > 0) {
+                            transOpts[x] = option;
+                            pushed = true;
+                        } else if (arg.result[i][n][1] === 0) {
+                            transOpts.splice(x, 1);
+                            pushed = true;
+                        }
                         break;
                     }
                 }
-                if (pushed === false) {
+                if ((pushed === false) && (arg.result[i][n][1] > 0)) {
                     transOpts.push(option);
                 }
             }
@@ -207,7 +212,6 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
                     if (shieldedOpts[x].value === option.value) {
                         shieldedOpts[x] = option;
                         pushed = true;
-                        break;
                     }
                 }
                 if (pushed === false) {
@@ -272,10 +276,6 @@ ipcRenderer.on('coin-reply', (event, arg) => {
     document.getElementById("coin").innerHTML = arg;
 });
 
-ipcRenderer.on('wallet-auth-error', (event, arg) => {
-    document.getElementById("alertSpan").innerHTML = arg;
-});
-
 function refreshUI() {
     // for receivePage
     generateQuery('listreceivedbyaddress', [0, true]);
@@ -295,8 +295,6 @@ function refreshUI() {
 
     //sort collected options
     options = [].concat(transOpts, shieldedOpts);
-
-
 
     // update the private send dropdown only if needed
     var different = false;
@@ -348,5 +346,8 @@ module.exports = {
     },
     showTxDetails: function(txid) {
         return showTxDetails(txid);
+    },
+    saveOpts: function(opts) {
+        ipcRenderer.send('save-opts', opts);
     }
 };

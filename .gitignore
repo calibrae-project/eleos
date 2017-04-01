@@ -4,6 +4,9 @@
 
 #Builds
 Eleos-*
+zcash*
+zend*
+zclassicd
 
 # Logs
 logs
