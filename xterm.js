@@ -1,4 +1,5 @@
 var express = require('express');
+var getUserDataDir = require('./main.js').getUserDataDir();
 var app = express();
 var expressWs = require('express-ws')(app);
 var os = require('os');
@@ -7,7 +8,7 @@ var pty = require('node-pty');
 var auth = require('http-auth');
 var basic = auth.basic({
     realm: "eleos",
-    file: __dirname + "/eleos.htpasswd"
+    file: (getUserDataDir + '/eleos.htpasswd')
 });
 
 var terminals = {},

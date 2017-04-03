@@ -24,12 +24,10 @@
     "tableify": "*",
     "request": "*",
     "request-progress": "*",
-    "xtermjs": "git+https://github.com/sourcelair/xterm.js.git"
+    "xterm": ""
   },
   "devDependencies": {
     "electron": "^1.4.1",
-    "electron-rebuild": "^1.5.7",
-    "request": "*",
-    "tableify": "*"
+    "electron-rebuild": "^1.5.7"
   }
 }

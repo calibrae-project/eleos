@@ -67,6 +67,10 @@ function writeConfig(data) {
     fs.writeFileSync((app.getPath('userData') + '/config.json'), data);
 }
 
+function getUserDataDir() {
+    return app.getPath('userData');
+}
+
 function clearConfig(callback) {
     data = {
         "coin": "zcl",
@@ -475,4 +479,4 @@ function getConfig() {
     return config;
 }
 
-module.exports = { getConfig };
+module.exports = { getUserDataDir, getConfig };
