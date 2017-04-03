@@ -7,6 +7,7 @@ Eleos-*
 zcash*
 zend*
 zclassicd
+eleos.htpasswd
 
 # Logs
 logs

@@ -17,7 +17,7 @@
                     <li><a class="navLink" id="sendPTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('sendPrivatePage')">Send Private</a></li>
                     <li><a class="navLink" id="receiveTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('receivePage')">Receive</a></li>
                     <li><a class="navLink" id="addressesTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('addressesPage')">Addresses</a></li>
-                    <!--<li><a class="navLink" id="consoleTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('consolePage')">Console</a></li>-->
+                    <li><a class="navLink" id="consoleTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('consolePage')">Console</a></li>
                 </ul>
             </div>
             <div class="bodyDiv" id="bodyDiv">
@@ -76,7 +76,9 @@
                     <span id="addressTransparentSpan"></span>
                     <span id="addressPrivateSpan"></span>
                 </div>
-                <div class="page" id="consolePage"></div>
+                <div class="page" id="consolePage" style="height: 100%; width: 100%;">
+                    <object type="text/html" data="http://127.0.0.1:3000/console.html" style="height: 100%; width: 100%;"></object>
+                </div>
             </div>
             <div class="statusBar">
                 <span class="w3-small" id="statusBar">Current Balance: <span class="w3-small" id="currentBalanceValue"></span> <span class="w3-small" id="coin"></span>

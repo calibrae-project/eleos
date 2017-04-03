@@ -14,6 +14,8 @@ SPROUT_VKEY_NAME='sprout-verifying.key'
 SPROUT_PKEY_URL="https://z.cash/downloads/$SPROUT_PKEY_NAME"
 SPROUT_VKEY_URL="https://z.cash/downloads/$SPROUT_VKEY_NAME"
 
+mkdir -p "$PARAMS_DIR"
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
     SHA256CMD="$(command -v shasum -a 256 || echo shasum -a 256)"
     SHA256ARGS="$(command -v shasum -a 256 >/dev/null || echo '-a 256')"
@@ -35,7 +37,9 @@ function fetch_params {
         echo "Retrieving: $url"
         if [[ $(sw_vers -productName) == "Mac OS X" ]]; then
             curl \
+                --retry 3 --retry-delay 15 \
                 --output "$dlname" \
+                -O \
                 -# -L\
                 "$url"
         else

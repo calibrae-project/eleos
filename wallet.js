@@ -1,104 +1,64 @@
-const {ipcMain} = require('electron');
-const request = require('request');
-const {dialog} = require('electron');
+const {app, dialog, ipcMain} = require('electron');
 const fs = require('fs');
 const os = require('os');
+const readline = require('readline');
+const request = require('request');
 
-const config = require('./config.json');
+var config = require('./main.js').getConfig();
 
-function writeConfig(data) {
-    fs.writeFile('config.json', data, function (err) {
-        if (err) {
-            console.log(err.message);
-        }
-    });
-}
+// set default coin config location
+var coinConf;
 
-// set default coin conf locations
-if ((config.coin === 'zcl') && (os.platform() === 'win32')) {
-    var coinConf = process.env.APPDATA + '/Zclassic/' + 'zclassic.conf';
+if ((config.confPathWin.length > 0) || (config.confPathMacOS.length > 0) || (config.confPathLinux.length > 0)) {
+    if (os.platform === 'win32') coinConf = config.confPathWin;
+    if (os.platform === 'darwin') coinConf = config.confPathMacOS;
+    if (os.platform === 'linux') coinConf = config.confPathLinux;
 }
-if ((config.coin === 'zcl') && (os.platform() === 'darwin')) {
-    var coinConf = process.env.HOME + '/Library/Application Support/Zclassic/' + 'zclassic.conf';
-}
-if ((config.coin === 'zcl') && (os.platform() === 'linux')) {
-    var coinConf = process.env.HOME + '/.zclassic/' + 'zclassic.conf';
-}
-if ((config.coin === 'zec') && (os.platform() === 'win32')) {
-    var coinConf = process.env.APPDATA + '/Zcash/' + 'zcash.conf';
-}
-if ((config.coin === 'zec') && (os.platform() === 'darwin')) {
-    var coinConf = process.env.HOME + '/Library/Application Support/Zcash/' + 'zcash.conf';
-}
-if ((config.coin === 'zec') && (os.platform() === 'linux')) {
-    var coinConf = process.env.HOME + '/.zcash/' + 'zcash.conf';
+else {
+    if ((config.coin.toLowerCase() === 'zcl') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
+        coinConf = app.getPath('appData') + '/Zclassic/zclassic.conf';
+    }
+    else if (config.coin.toLowerCase() === 'zcl') {
+        coinConf = app.getPath('home') + '/.zclassic/zclassic.conf';
+    }
+    else if ((config.coin.toLowerCase() === 'zec') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
+        coinConf = app.getPath('appData') + '/Zcash/zcash.conf';
+    }
+    else if (config.coin.toLowerCase() === 'zec') {
+        coinConf = app.getPath('home') + '/.zcash/zcash.conf';
+    }
 }
 
 // get config options from wallet daemon file
-let array = [];
-try {
-    if (os.platform() === 'win32' && config.confPathWin.length === 0) {
-        array = fs.readFileSync(coinConf, 'UTF-8').toString().split('\r');
-    } else if (os.platform() === 'win32') {
-        array = fs.readFileSync(config.confPathWin, 'UTF-8').toString().split('\n');
-    }
-    if (os.platform() === 'darwin' && config.confPathMacOS.length === 0) {
-        array = fs.readFileSync(coinConf, 'UTF-8').toString().split('\n');
-    } else if (os.platform() === 'darwin') {
-        array = fs.readFileSync(config.confPathMacOS, 'UTF-8').toString().split('\n');
-    }
-    if (os.platform() === 'linux' && config.confPathLinux.length === 0) {
-        array = fs.readFileSync(coinConf, 'UTF-8').toString().split('\n');
-    } else if (os.platform() === 'linux') {
-        array = fs.readFileSync(config.confPathLinux, 'UTF-8').toString().split('\n');
-    }
-
-    for (let i = 0; i < array.length; i++) {
-        let tmpString = array[i].replace(' ', '').toLowerCase().trim();
-        if (tmpString.search('rpcuser') > -1) {
-            var rpcUser = array[i].replace(' ', '').trim().substr(array[i].replace(' ', '').trim().indexOf('=') + 1);
-        }
-        if (tmpString.search('rpcpassword') > -1) {
-            var rpcPassword = array[i].replace(' ', '').trim().substr(array[i].replace(' ', '').trim().indexOf('=') + 1);
-        }
-        if (tmpString.search('rpcport') > -1) {
-            var rpcPort = array[i].replace(' ', '').trim().substr(array[i].replace(' ', '').trim().indexOf('=') + 1);
-        }
-    }
-}
-catch (error) {
-    dialog.showErrorBox('Could not find wallet configuration file', 'Double-check the coin selection. If that doesn\'t work then manually set the configuration file location in the options.');
-}
-
-if (rpcPort === '' || rpcPort === undefined) {
-    rpcPort = config.rpcPort.length > 0 ? config.rpcPort : '8232';
-}
-
-ipcMain.on('jsonQuery-request', (event, query) => {
-    let response = jsonQuery(query, function(response) {
-        event.sender.send('jsonQuery-reply', response);
-    });
+var rpcOpts = {};
+var rpcUser, rpcPassword, rpcIP, rpcPort;
+const rl = readline.createInterface({ input: fs.createReadStream(coinConf) });
+rl.on('line', (line) => {
+    line.trim();
+    rpcOpts[line.split("=", 2)[0].toLowerCase()] = line.split("=", 2)[1];
 });
+rl.on('close', () => {
+    // set RPC communication options
+    rpcUser = rpcOpts.rpcuser ? rpcOpts.rpcuser : config.rpcUser;
+    rpcPassword = rpcOpts.rpcpassword ? rpcOpts.rpcpassword : config.rpcPassword;
+    rpcIP = config.rpcIP.length > 0 ? config.rpcIP : '127.0.0.1';
+    rpcPort = rpcOpts.rpcport ? rpcOpts.rpcport : config.rpcPort;
 
-ipcMain.on('jsonQuery-request-sync', (event, query) => {
-    let response = jsonQuery(query, function(response) {
-        event.returnValue = response;
-    });
-});
-
-ipcMain.on('save-opts', (event, opts) => {
-    for (let i = 0; i < Object.keys(opts).length; i++) {
-        let key = Object.keys(opts)[i];
-        config[key] = opts[key];
-    }
-    writeConfig(JSON.stringify(config, null, 4));
+    // authentication for terminal
+    var HtAuth = require('ht-auth'),
+        htAuth = HtAuth.create({file: 'eleos.htpasswd'});
+        htAuth.add({username: rpcUser, password: rpcPassword, force: true}, function (err) {
+            console.log(err);
+            // initialize xtermjs
+            const term = require('./xterm.js');
+        });
 });
 
 function jsonQuery(query, callback) {
+    if (rpcUser.length === 0 || rpcPassword.length === 0 || rpcIP.length === 0 || rpcPort.length === 0) return;
     var options  = {
         method: 'POST',
-        url: 'http://' + (rpcUser ? rpcUser : config.rpcUser) + ':' + (rpcPassword ? rpcPassword : config.rpcPass) + '@'
-            + (config.rpcIP.length > 0 ? config.rpcIP : '127.0.0.1') + ':' + (rpcPort ? rpcPort : config.rpcPort),
+        url: 'http://' + rpcUser + ':' + rpcPassword + '@' + rpcIP + ':' + rpcPort,
         headers: {
             'Content-type': 'text/plain'
         },
@@ -115,10 +75,24 @@ function jsonQuery(query, callback) {
     });
 }
 
+ipcMain.on('jsonQuery-request', (event, query) => {
+    jsonQuery(query, function(response) {
+        event.sender.send('jsonQuery-reply', response);
+    });
+});
+
+ipcMain.on('jsonQuery-request-sync', (event, query) => {
+    jsonQuery(query, function(response) {
+        event.returnValue = response;
+    });
+});
 
 ipcMain.on('coin-request', (event) => {
     event.sender.send('coin-reply', config.coin);
 });
 
+function getCredentials() {
+    return {rpcUser: rpcUser, rpcPassword: rpcPassword, rpcIP: rpcIP, rpcPort: rpcPort};
+}
 
-module.exports = { jsonQuery };
+module.exports = { getCredentials, jsonQuery };

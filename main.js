@@ -1,105 +1,209 @@
 const electron = require('electron');
-const {dialog} = require('electron');
-const app = electron.app;
+const {app, dialog, ipcMain, Menu } = require('electron');
 const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
-const {ipcMain, Menu} = require('electron');
 const os = require('os');
-const spawn = require('child_process').spawn;
-const spawnSync = require('child_process').spawnSync;
 const fs = require('fs');
+const spawn = require('child_process').spawn;
 
-const config = require('./config.json');
-const wallet = require('./wallet.js');
+const crypto = require('crypto');
+const request = require('request');
+const progress = require('request-progress');
 
-let mainWindow;
-let zcashd;
+var config;
+var wallet;
+var mainWindow;
+var zcashd;
+var downloadProgress = {};
+var paramsPending = false;
+var keyVerification = {
+    proving: false,
+    provingDownloading: false,
+    verifying: false,
+    verifyingDownloading: false
+};
+var configComplete = false;
 
-function writeConfig(data) {
-    fs.writeFile('config.json', data, function (err) {
-        if (err) {
-            console.log(err.message);
+function getFileHash(path, callback) {
+    const hash = crypto.createHash('sha256');
+    let input;
+    if (fs.existsSync(path)) {
+        input = fs.createReadStream(path);
+    }
+    else {
+        return callback(false);
+    }
+    input.on('readable', () => {
+        const data = input.read();
+        if (data)
+            hash.update(data);
+        else {
+            callback(hash.digest('hex'));
         }
     });
 }
 
-function clearConfig() {
+function fileDownload(url, path, callback) {
+    if (paramsPending === true) return;
+    progress(request(url))
+        .on('progress', function (state) {
+            paramsPending = true;
+            downloadProgress.name = url;
+            downloadProgress.percent = state.percent;
+            downloadProgress.timeRemaining = state.time.remaining;
+        })
+        .on('error', function (err) {
+            dialog.showErrorBox('Error downloading file', 'There was an error trying to download ' + downloadProgress.name);
+        })
+        .on('end', function () {
+            paramsPending = false;
+            if (typeof callback === "function") callback();
+        })
+        .pipe(fs.createWriteStream(path));
+}
+
+function writeConfig(data) {
+    fs.writeFileSync((app.getPath('userData') + '/config.json'), data);
+}
+
+function clearConfig(callback) {
     data = {
         "coin": "zcl",
         "rpcUser": "",
         "rpcPass": "",
-        "rpcIP": "",
+        "rpcIP": "127.0.0.1",
         "rpcPort": "",
         "binaryPathWin": "",
         "binaryPathMacOS": "",
         "binaryPathLinux": "",
         "confPathWin": "",
         "confPathMacOS": "",
-        "confPathLinux": "",
-        "keysLoaded": false
+        "confPathLinux": ""
     };
     data = JSON.stringify(data, null, 4);
-    fs.writeFile('config.json', data, function (err) {
-        if (err) {
-            console.log(err.message);
-        } else {
-            dialog.showErrorBox('Configuration options reset', 'Eleos configuration file reset. Please restart the wallet.');
+    fs.writeFileSync((app.getPath('userData') + '/config.json'), data);
+    config = require(app.getPath('userData') + '/config.json');
+    dialog.showErrorBox('Configuration options reset', 'Eleos configuration file reset.');
+    if (typeof callback === "function") callback();
+}
+
+function checkCoinConfig(callback) {
+    // return if config not yet initialized
+    if (!config || !config.coin) return;
+
+    // generic locations for zclassic and zcash
+    let zclPath, zecPath;
+    if ((os.platform() === 'win32') || (os.platform() === 'darwin')) {
+        zclPath = '/Zclassic';
+        zecPath = '/Zcash';
+    }
+    else {
+        zclPath = '/.zclassic';
+        zecPath = '/.zcash';
+    }
+
+    // check if coin configuration files exist and if not write them
+    if ((config.coin.toLowerCase() !== 'zec') && (!fs.existsSync(app.getPath('appData') + zclPath + '/zclassic.conf'))) {
+        if (!fs.existsSync(app.getPath('appData') + zclPath)) fs.mkdirSync(app.getPath('appData') + zclPath);
+        let data = [
+            'rpcuser=zclrpc',
+            'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
+            'rpcport=8232'
+        ];
+        fs.writeFileSync(app.getPath('appData') + zclPath + '/zclassic.conf', data.join('\n'));
+    }
+    if ((config.coin.toLowerCase() === 'zec') && (!fs.existsSync(app.getPath('appData') + zecPath + '/zcash.conf'))) {
+        if (!fs.existsSync(app.getPath('appData') + zecPath)) fs.mkdirSync(app.getPath('appData') + zecPath);
+        let data = [
+            'rpcuser=zcashrpc',
+            'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
+            'rpcport=8233'
+        ];
+        fs.writeFileSync(app.getPath('appData') + zecPath + '/zcash.conf', data.join('\n'));
+    }
+    if (typeof callback === "function") callback();
+}
+
+function checkConfig(callback) {
+    // return if both eleos and coins are configured
+    if (configComplete === true) return;
+
+    // if config.json doesn't exist then create a generic one
+    if (!fs.existsSync(app.getPath('userData') + '/config.json')) {
+        clearConfig(function() {
+            checkCoinConfig(function () {
+                configComplete = true;
+                checkParams();
+                if (typeof callback === "function") callback();
+            });
+        });
+    }
+    //
+    else {
+        config = require(app.getPath('userData') + '/config.json');
+        checkCoinConfig(function (){
+            configComplete = true;
+            checkParams();
+            if (typeof callback === "function") callback();
+        });
+    }
+}
+
+function checkParams() {
+    if (keyVerification.verifying === true || keyVerification.proving === true ||
+        paramsPending === true || keyVerification.verifyingDownloading === true ||
+        keyVerification.provingDownloading === true) return;
+    if (!fs.existsSync(app.getPath('appData') + '/ZcashParams/')){
+        fs.mkdirSync(app.getPath('appData') + '/ZcashParams/');
+    }
+    getFileHash(app.getPath('appData') + '/ZcashParams/sprout-verifying.key', function (result) {
+        if (result === '4bd498dae0aacfd8e98dc306338d017d9c08dd0918ead18172bd0aec2fc5df82') {
+            keyVerification.verifying = true;
+        }
+        else {
+            keyVerification.verifyingDownloading = true;
+            fileDownload('https://z.cash/downloads/sprout-verifying.key', app.getPath('appData') + '/ZcashParams/sprout-verifying.key',
+                function () {
+                keyVerification.verifying = true;
+                keyVerification.verifyingDownloading = false;
+            });
+        }
+    });
+    getFileHash(app.getPath('appData') + '/ZcashParams/sprout-proving.key', function (result) {
+        if (result === '8bc20a7f013b2b58970cddd2e7ea028975c88ae7ceb9259a5344a16bc2c0eef7') {
+            keyVerification.proving = true;
+        }
+        else {
+            keyVerification.provingDownloading = true;
+            fileDownload('https://z.cash/downloads/sprout-proving.key', app.getPath('appData') + '/ZcashParams/sprout-proving.key',
+                function () {
+                keyVerification.proving = true;
+                keyVerification.provingDownloading = false;
+            });
         }
     });
 }
 
-function getParams(reset) {
-    if (reset === true) {
-        config.keysLoaded = false;
-    }
-
-    // check if keys are valid in MacOS environment
-    if ((os.platform() === 'darwin') && (config.keysLoaded !== true)) {
-        let cmd = 'open';
-        let args = ['-a', 'Terminal.app', 'init.sh'];
-        let result = spawnSync(cmd, args).status;
-        dialog.showErrorBox('Downloading proving and verification keys', 'This may take a few minutes (about 1gb of data). Restart the wallet once complete.');
-        if (result === 0) {
-            config.keysLoaded = true;
-            var data = JSON.stringify(config, null, 4);
-            writeConfig(data);
-            startWallet();
-        }
-    }
-
-    // check if keys are valid in Linux environment
-    if ((os.platform() === 'linux') && (config.keysLoaded !== true)) {
-        let cmd = 'xterm';
-        let args = ['-e', require('path').dirname(require.main.filename) + '/init.sh'];
-        let result = spawnSync(cmd, args).status;
-        dialog.showErrorBox('Downloading proving and verification keys', 'This may take a few minutes (about 1gb of data). Restart the wallet once complete.');
-        if (result === 0) {
-            config.keysLoaded = true;
-            var data = JSON.stringify(config, null, 4);
-            writeConfig(data);
-            startWallet();
-        }
-    }
-}
-
 function startWallet() {
-    if ((os.platform() === 'win32') && (config.keysLoaded === true)) {
-        var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : require('path').dirname(require.main.filename) + '/zcash.exe';
+    // try to get path from config.json first then use default
+    if (os.platform() === 'win32') {
+        var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcashd.exe');
     }
-    else if ((os.platform() === 'darwin') && (config.keysLoaded === true)) {
-        var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : require('path').dirname(require.main.filename) + '/zcashd-mac';
+    else if (os.platform() === 'darwin') {
+        var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcashd-mac');
     }
-    else if ((os.platform() === 'linux') && (config.keysLoaded === true)) {
-        var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : require('path').dirname(require.main.filename) + '/zcashd-linux';
+    else if (os.platform() === 'linux') {
+        var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
     }
-    getParams();
-    if (config.keysLoaded === true) {
+
+    // only attempt to start the wallet after keys are downloaded and configs are set
+    if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
         try {
             zcashd = spawn(cmd);
-            createWindow();
         }
-        catch (err) { // TODO: add exception catching
+        catch (err) {
+            dialog.showErrorBox('Could not start wallet daemon', 'Double-check the configuration settings.');
         }
     }
 }
@@ -116,9 +220,7 @@ function getFileLocationOpts(title) {
 }
 
 function binaryPathCB(path) {
-    if (path === undefined) {
-        return;
-    }
+    if (!path) return;
     path = path[0];
     console.log('Setting binary path to: ' + path);
     if (os.platform() === 'win32') {
@@ -134,9 +236,7 @@ function binaryPathCB(path) {
 }
 
 function confPathCB(path) {
-    if (path === undefined) {
-        return;
-    }
+    if (!path) return;
     path = path[0];
     console.log('Setting coin configuration path to: ' + path);
     if (os.platform() === 'win32') {
@@ -152,19 +252,23 @@ function confPathCB(path) {
 }
 
 function showRPCOpts() {
-    let win = new BrowserWindow({width: 420, height: 400}); //, parent: mainWindow, modal: true});
-    //win.webContents.openDevTools();
+    let win = new BrowserWindow({width: 420, height: 400});
     win.loadURL(url.format({
         pathname: path.join(__dirname, 'rpc.html'),
         protocol: 'file:',
         slashes: true}));
     win.once('ready-to-show', () => {
-        win.show()
+        win.show();
     })
 
 }
 
 function createWindow() {
+    if (configComplete === false) {
+        checkConfig(createWindow);
+        return;
+    }
+    wallet = require('./wallet.js');
     const template = [
         {
             label: 'File',
@@ -200,10 +304,6 @@ function createWindow() {
         {
             label: 'Options',
             submenu: [
-                {
-                    label: 'Redownload Params',
-                    click() { getParams(true); }
-                },
                 {
                     label: 'Set Wallet Daemon',
                     click() { dialog.showOpenDialog(getFileLocationOpts('Set Wallet Daemon Location'), binaryPathCB) }
@@ -254,7 +354,7 @@ function createWindow() {
         }
     ];
 
-    if (process.platform === 'darwin') {
+    if (os.platform() === 'darwin') {
         template.unshift({
             label: app.getName(),
             submenu: [
@@ -290,11 +390,9 @@ function createWindow() {
         });
     }
 
-
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 
-    // Create the browser window.
     mainWindow = new BrowserWindow({
         'minWidth': 780,
         'minHeight': 430,
@@ -303,44 +401,33 @@ function createWindow() {
         icon: 'resources/' + config.coin.toLowerCase() + '.png'
     });
 
-    // and load the index.html of the app.
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, 'index.html'),
         protocol: 'file:',
         slashes: true
     }));
 
-    // Open the DevTools.
     //mainWindow.webContents.openDevTools();
 
-    // Emitted when the window is closed.
     mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
         mainWindow = null;
     })
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', startWallet);
 
-// Quit when all windows are closed.
+app.on('ready', function() {
+    checkConfig(createWindow);
+});
+
 app.on('window-all-closed', function () {
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
         app.quit();
     }
 });
 
 app.on('activate', function () {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
-        startWallet();
+        checkConfig(createWindow);
     }
 });
 
@@ -353,3 +440,39 @@ app.on('before-quit', function () {
             });
     }
 });
+
+app.on('login', (event, webContents, request, authInfo, callback) => {
+    event.preventDefault();
+    if (request.url === 'http://127.0.0.1:3000/console.html') callback(wallet.getCredentials().rpcUser, wallet.getCredentials().rpcPassword);
+});
+
+ipcMain.on('check-config', (event) => {
+    checkConfig();
+});
+
+ipcMain.on('check-params', (event) => {
+    if ((keyVerification.verifying === false || keyVerification.proving === false)) checkParams();
+    if (keyVerification.verifyingDownloading === true || keyVerification.provingDownloading === true)
+        event.sender.send('params-pending', downloadProgress);
+    else event.sender.send('params-complete', Boolean(zcashd));
+});
+
+ipcMain.on('check-wallet', (event) => {
+    if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true)) {
+        startWallet();
+    }
+});
+
+ipcMain.on('save-opts', (event, opts) => {
+    for (let i = 0; i < Object.keys(opts).length; i++) {
+        let key = Object.keys(opts)[i];
+        config[key] = opts[key];
+    }
+    writeConfig(JSON.stringify(config, null, 4));
+});
+
+function getConfig() {
+    return config;
+}
+
+module.exports = { getConfig };

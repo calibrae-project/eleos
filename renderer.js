@@ -1,16 +1,7 @@
-// This file is required by the index.html file and will
-// be executed in the renderer process for that window.
-// All of the Node.js APIs are available in this process.
 const {ipcRenderer} = require('electron');
 var tableify = require('tableify');
 
-var txs = [];
-var privTxs = [];
-var memos = [];
-var transOpts = [];
-var shieldedOpts = [];
-var options = [];
-var oldOptions = [];
+var memos = [], options = [], oldOptions = [], privTxs = [], shieldedOpts = [], transOpts = [], txs = [];
 var genHistory = {'transparent': false, 'private': false};
 
 Array.prototype.getRandom = function () {
@@ -194,7 +185,9 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         for (let i = 0; i < div.getElementsByClassName("number").length; i++) {
             div.getElementsByClassName("number")[i].className += ' w3-right';
         }
-        document.getElementById("addressTransparentSpan").innerHTML = div.innerHTML;
+        if (document.getElementById("addressTransparentSpan").innerHTML !== div.innerHTML) {
+            document.getElementById("addressTransparentSpan").innerHTML = div.innerHTML;
+        }
     }
     else if (arg.id === 'z_listaddresses') {
         let table = [];
@@ -230,7 +223,9 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         for (let i = 0; i < div.getElementsByClassName("number").length; i++) {
             div.getElementsByClassName("number")[i].className += ' w3-right';
         }
-        document.getElementById("addressPrivateSpan").innerHTML = div.innerHTML;
+        if (document.getElementById("addressPrivateSpan").innerHTML !== div.innerHTML) {
+            document.getElementById("addressPrivateSpan").innerHTML = div.innerHTML;
+        }
 
         // gather a list of TXIDs associated with z_addresses
         for (let i = 0; i < arg.result.length; i++) {
@@ -276,7 +271,33 @@ ipcRenderer.on('coin-reply', (event, arg) => {
     document.getElementById("coin").innerHTML = arg;
 });
 
+ipcRenderer.on('params-pending', (event, arg) => {
+    if (arg.percent < 1) {
+        document.getElementById("alertSpan").innerHTML = '<img src="resources/box.gif" style="display: block; margin: auto; padding-top: 15px;"/>' +
+            '<h2 style="text-align: center;">downloading proving and verification keys</h2>' +
+            '<h4 style="text-align: center;">' + (arg.name.substr(arg.name.lastIndexOf('/') + 1)) + '</h4>' +
+            '<h4 style="text-align: center;">' + (arg.percent * 100).toFixed(2) + '%</h4>';
+    }
+    else if (!arg.percent || arg.percent === 1) {
+        document.getElementById("alertSpan").innerHTML = '';
+    }
+});
+
+ipcRenderer.on('params-complete', (event, arg) => {
+    if (arg === false) {
+        document.getElementById("alertSpan").innerHTML = '<img src="resources/box.gif" style="display: block; margin: auto; padding-top: 15px;"/>' +
+            '<h2 style="text-align: center;">initializing</h2>';
+    }
+    else {
+        document.getElementById("alertSpan").innerHTML = '';
+    }
+});
+
 function refreshUI() {
+    ipcRenderer.send('check-params');
+    ipcRenderer.send('check-config');
+    ipcRenderer.send('check-wallet');
+
     // for receivePage
     generateQuery('listreceivedbyaddress', [0, true]);
 
@@ -333,7 +354,7 @@ function pollUI() {
 }
 
 refreshUI();
-setInterval(refreshUI, 5500);
+setInterval(refreshUI, 900);
 setInterval(pollUI, 400);
 ipcRenderer.send('coin-request'); // get abbreviation for coin
 
