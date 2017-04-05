@@ -256,7 +256,7 @@ function confPathCB(path) {
 }
 
 function showRPCOpts() {
-    let win = new BrowserWindow({width: 420, height: 400});
+    let win = new BrowserWindow({width: 420, height: 480});
     win.loadURL(url.format({
         pathname: path.join(__dirname, 'rpc.html'),
         protocol: 'file:',
@@ -399,9 +399,9 @@ function createWindow() {
 
     mainWindow = new BrowserWindow({
         'minWidth': 780,
-        'minHeight': 430,
+        'minHeight': 480,
         'width': 780,
-        'height': 430,
+        'height': 480,
         icon: 'resources/' + config.coin.toLowerCase() + '.png'
     });
 
