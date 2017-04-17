@@ -30,7 +30,6 @@ Eleos is primarily designed for Zcash-based cryptocurrencies.
 | Zclassic | Fully supported |
 | Zcash | Fully supported |
 | Zen | Not yet supported |
-|
 
 
 ### Development
