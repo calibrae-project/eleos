@@ -5,9 +5,12 @@
 #Builds
 Eleos-*
 zcash*
+zcld*
 zend*
 zclassicd
 eleos.htpasswd
+*cli
+*exe
 
 # Logs
 logs
