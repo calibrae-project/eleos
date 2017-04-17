@@ -120,16 +120,16 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         document.getElementById("alertSpan").innerHTML = '';
     }
 
-    if (arg.id === 'getnetworkinfo') {
+    if (arg.id === 'getnetworkinfo' && arg.result) {
         document.getElementById("connectionsValue").innerHTML = arg.result.connections;
     }
-    else if (arg.id === 'z_gettotalbalance') {
+    else if (arg.id === 'z_gettotalbalance' && arg.result) {
         document.getElementById("currentBalanceValue").innerHTML = arg.result.total;
         document.getElementById("transparentBalanceValue").innerHTML = arg.result.transparent;
         document.getElementById("transparentAvailableValue").innerHTML = arg.result.transparent;
         document.getElementById("privateBalanceValue").innerHTML = arg.result.private;
     }
-    else if (arg.id === 'listtransactions') {
+    else if (arg.id === 'listtransactions' && arg.result) {
         let table = arg.result;
         for (let i = 0; i < table.length; i++) {
             delete table[i]["account"];
@@ -146,7 +146,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         }
         genHistory.transparent = true;
     }
-    if (arg.id === 'listaddressgroupings') {
+    if (arg.id === 'listaddressgroupings' && arg.result) {
         let table = [];
         let ctr = 0;
         for (let i = 0; i < arg.result.length; i++) {
@@ -189,7 +189,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
             document.getElementById("addressTransparentSpan").innerHTML = div.innerHTML;
         }
     }
-    else if (arg.id === 'z_listaddresses') {
+    else if (arg.id === 'z_listaddresses' && arg.result) {
         let table = [];
         let ctr = 0;
         for (let i = 0; i < arg.result.length; i++) {
@@ -238,7 +238,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         }
         genHistory.private = true;
     }
-    else if (arg.id === 'listreceivedbyaddress') {
+    else if (arg.id === 'listreceivedbyaddress' && arg.result) {
         let unusedAddresses = [];
         for (let i = 0; i < arg.result.length; i++) {
             if (arg.result[i].amount === 0) {
@@ -268,7 +268,10 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
 });
 
 ipcRenderer.on('coin-reply', (event, arg) => {
-    document.getElementById("coin").innerHTML = arg;
+    let elements = document.getElementsByClassName("coin");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].innerHTML = arg;
+    }
 });
 
 ipcRenderer.on('params-pending', (event, arg) => {
@@ -294,6 +297,7 @@ ipcRenderer.on('params-complete', (event, arg) => {
 });
 
 function refreshUI() {
+    ipcRenderer.send('coin-request');
     ipcRenderer.send('check-params');
     ipcRenderer.send('check-config');
     ipcRenderer.send('check-wallet');
@@ -356,7 +360,6 @@ function pollUI() {
 refreshUI();
 setInterval(refreshUI, 900);
 setInterval(pollUI, 400);
-ipcRenderer.send('coin-request'); // get abbreviation for coin
 
 module.exports = {
     generateQuerySync: function(method, params) {

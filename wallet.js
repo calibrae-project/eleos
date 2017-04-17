@@ -87,7 +87,7 @@ ipcMain.on('jsonQuery-request-sync', (event, query) => {
 });
 
 ipcMain.on('coin-request', (event) => {
-    event.sender.send('coin-reply', config.coin);
+    event.sender.send('coin-reply', config.coin.length === 0 ? 'zcl' : config.coin.toLowerCase());
 });
 
 function getCredentials() {
