@@ -1,6 +1,6 @@
 {
   "name": "Eleos",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A minimal Equihash wallet",
   "main": "main.js",
   "scripts": {
