@@ -42,7 +42,7 @@ rl.on('close', () => {
     rpcUser = rpcOpts.rpcuser ? rpcOpts.rpcuser : config.rpcUser;
     rpcPassword = rpcOpts.rpcpassword ? rpcOpts.rpcpassword : config.rpcPassword;
     rpcIP = config.rpcIP.length > 0 ? config.rpcIP : '127.0.0.1';
-    rpcPort = rpcOpts.rpcport ? rpcOpts.rpcport : config.rpcPort;
+    rpcPort = rpcOpts.rpcport ? rpcOpts.rpcport : (config.rpcPort.length > 0 ? config.rpcPort : (config.coin == 'zcl' ? 8232 : 8233));
 
     // authentication for terminal
     var HtAuth = require('ht-auth'),
