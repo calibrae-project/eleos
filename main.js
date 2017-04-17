@@ -6,6 +6,7 @@ const url = require('url');
 const os = require('os');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
+const tcpPortUsed = require('tcp-port-used');
 
 const crypto = require('crypto');
 const request = require('request');
@@ -201,13 +202,19 @@ function startWallet() {
         var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
     }
 
-    // only attempt to start the wallet after keys are downloaded and configs are set
-    if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
-        try {
-            zcashd = spawn(cmd);
-        }
-        catch (err) {
-            dialog.showErrorBox('Could not start wallet daemon', 'Double-check the configuration settings.');
+    // check if wallet binary exists first
+    if (!fs.existsSync(cmd)) {
+        dialog.showErrorBox('Could not find wallet daemon', 'Double-check the configuration settings.');
+        app.quit();
+    } else {
+        console.log('starting wallet');
+        if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
+            try {
+                zcashd = spawn(cmd);
+            }
+            catch (err) {
+                dialog.showErrorBox('Could not start wallet daemon', 'Double-check the configuration settings.');
+            }
         }
     }
 }
@@ -458,7 +465,18 @@ ipcMain.on('check-params', (event) => {
     if ((keyVerification.verifying === false || keyVerification.proving === false)) checkParams();
     if (keyVerification.verifyingDownloading === true || keyVerification.provingDownloading === true)
         event.sender.send('params-pending', downloadProgress);
-    else event.sender.send('params-complete', Boolean(zcashd));
+    else {
+        // check if rpcIP and rpcPort are already running
+        tcpPortUsed.check(parseInt(wallet.getCredentials().rpcPort), wallet.getCredentials().rpcIP)
+            .then(function (inUse) {
+                if (inUse) zcashd = true;
+                if (!inUse) zcashd = false;
+            }, function (err) {
+                console.log('error polling rpc port');
+                zcashd = false;
+            });
+        event.sender.send('params-complete', Boolean(zcashd));
+    }
 });
 
 ipcMain.on('check-wallet', (event) => {

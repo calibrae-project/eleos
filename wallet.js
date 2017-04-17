@@ -48,7 +48,6 @@ rl.on('close', () => {
     var HtAuth = require('ht-auth'),
         htAuth = HtAuth.create({file: (app.getPath('userData') + '/eleos.htpasswd')});
         htAuth.add({username: rpcUser, password: rpcPassword, force: true}, function (err) {
-            console.log(err);
             // initialize xtermjs
             const term = require('./xterm.js');
         });
