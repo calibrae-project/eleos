@@ -191,15 +191,29 @@ function checkParams() {
 }
 
 function startWallet() {
-    // try to get path from config.json first then use default
-    if (os.platform() === 'win32') {
-        var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcashd.exe');
+    // if we are configured for zcl then do zcl stuff bro
+    if (config.coin.toLowerCase() === 'zcl' || config.coin.toLowerCase() === '') {
+        if (os.platform() === 'win32') {
+            var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcld.exe');
+        }
+        else if (os.platform() === 'darwin') {
+            var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcld-mac');
+        }
+        else if (os.platform() === 'linux') {
+            var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcld-linux');
+        }
     }
-    else if (os.platform() === 'darwin') {
-        var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcashd-mac');
-    }
-    else if (os.platform() === 'linux') {
-        var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
+    // if not then try zec
+    else if (config.coin.toLowerCase() === 'zec') {
+        if (os.platform() === 'win32') {
+            var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcashd.exe');
+        }
+        else if (os.platform() === 'darwin') {
+            var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcashd-mac');
+        }
+        else if (os.platform() === 'linux') {
+            var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
+        }
     }
 
     // check if wallet binary exists first
@@ -316,6 +330,32 @@ function createWindow() {
             label: 'Options',
             submenu: [
                 {
+                    label: 'Set Coin',
+                    submenu: [
+                        {
+                            label: 'Zclassic (ZCL)',
+                            type: 'radio',
+                            checked: (config.coin.toLowerCase() === 'zcl'),
+                            click() {
+                                config.coin = 'zcl';
+                                writeConfig(JSON.stringify(config, null, 4));
+                                dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                            }
+                        },
+                        {
+                            label: 'Zcash (ZEC)',
+                            type: 'radio',
+                            checked: (config.coin.toLowerCase() === 'zec'),
+                            click() {
+                                config.coin = 'zec';
+                                writeConfig(JSON.stringify(config, null, 4));
+                                dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                            }
+                        }
+
+                    ]
+                },
+                {
                     label: 'Set Wallet Daemon',
                     click() { dialog.showOpenDialog(getFileLocationOpts('Set Wallet Daemon Location'), binaryPathCB) }
                 },
@@ -326,24 +366,6 @@ function createWindow() {
                 {
                     label: 'Set RPC Credentials',
                     click() { showRPCOpts() }
-                },
-                {
-                    label: 'Set Coin',
-                    submenu: [
-                        {
-                            label: 'Zclassic (ZCL)',
-                            type: 'radio',
-                            checked: (config.coin.toLowerCase() === 'zcl'),
-                            click() { config.coin = 'zcl'; writeConfig(JSON.stringify(config, null, 4)) }
-                        },
-                        {
-                            label: 'Zcash (ZEC)',
-                            type: 'radio',
-                            checked: (config.coin.toLowerCase() === 'zec'),
-                            click() { config.coin = 'zec'; writeConfig(JSON.stringify(config, null, 4)) }
-                        }
-
-                    ]
                 },
                 {
                     label: 'separator',
