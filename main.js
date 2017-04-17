@@ -340,6 +340,7 @@ function createWindow() {
                                 config.coin = 'zcl';
                                 writeConfig(JSON.stringify(config, null, 4));
                                 dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                                app.quit();
                             }
                         },
                         {
@@ -350,6 +351,7 @@ function createWindow() {
                                 config.coin = 'zec';
                                 writeConfig(JSON.stringify(config, null, 4));
                                 dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                                app.quit();
                             }
                         }
 
