@@ -10,6 +10,7 @@ Eleos is a multi-platform wallet for zero-knowledge cryptocurrencies written in 
 
 ### Installation
 Note: First time installations may take awhile to load since ~1GB of cryptographic data must be downloaded first.
+
 ##### Windows and MacOS
 The simplest way to get started on Windows or MacOS is to [download and run the latest installer](https://github.com/zencashio/eleos/releases).
 
@@ -23,13 +24,13 @@ Note: Eleos requires that the compiled wallets are named zcashd-linux or zcld-li
 
 ### Supported Wallets
 
-Eleos is primarily designed for Zcash-based cryptocurrencies.
+Eleos is primarily designed for Zcash-based cryptocurrencies. The wallet.dat for each cryptocurrency is stored in the directories below.
 
-| Support | Status |
-| ------ | ------ |
-| Zclassic | Fully supported |
-| Zcash | Fully supported |
-| Zen | Not yet supported |
+| Support | Status | Windows Location | MacOS Location |
+| ------ | ------ | ------ | ------ |
+| Zclassic | Fully supported | %APPDATA%/Zclassic | ~/Library/Application Support/Zclassic |
+| Zcash | Fully supported | %APPDATA%/Zcash | ~/Library/Application Support/Zcash |
+| Zen | Not yet supported | | |
 
 
 ### Development
