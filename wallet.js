@@ -57,7 +57,7 @@ function jsonQuery(query, callback) {
     if (rpcUser.length === 0 || rpcPassword.length === 0 || rpcIP.length === 0 || rpcPort.length === 0) return;
     var options  = {
         method: 'POST',
-        url: 'http://' + rpcUser + ':' + rpcPassword + '@' + rpcIP + ':' + rpcPort,
+        url: encodeURI('http://' + rpcUser + ':' + rpcPassword + '@' + rpcIP + ':' + rpcPort),
         headers: {
             'Content-type': 'text/plain'
         },
