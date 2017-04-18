@@ -9,7 +9,7 @@ var config = require('./main.js').getConfig();
 // set default coin config location
 var coinConf;
 
-if ((config.confPathWin.length > 0) || (config.confPathMacOS.length > 0) || (config.confPathLinux.length > 0)) {
+if ((config.confPathWin.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathMacOS.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathLinux.length > 0 && fs.existsSync(config.confPathWin))) {
     if (os.platform === 'win32') coinConf = config.confPathWin;
     if (os.platform === 'darwin') coinConf = config.confPathMacOS;
     if (os.platform === 'linux') coinConf = config.confPathLinux;
@@ -21,7 +21,7 @@ else {
     else if (config.coin.toLowerCase() === 'zcl') {
         coinConf = app.getPath('home') + '/.zclassic/zclassic.conf';
     }
-    else if ((config.coin.toLowerCase() === 'zec') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
+    if ((config.coin.toLowerCase() === 'zec') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
         coinConf = app.getPath('appData') + '/Zcash/zcash.conf';
     }
     else if (config.coin.toLowerCase() === 'zec') {
@@ -30,9 +30,17 @@ else {
 }
 
 // get config options from wallet daemon file
+var rl;
 var rpcOpts = {};
 var rpcUser, rpcPassword, rpcIP, rpcPort;
-const rl = readline.createInterface({ input: fs.createReadStream(coinConf) });
+if (!fs.existsSync(coinConf)) {
+    console.log('Invalid path for wallet config file. Check config.json for accuracy.');
+    return;
+}
+else {
+    rl = readline.createInterface({input: fs.createReadStream(coinConf)});
+}
+
 rl.on('line', (line) => {
     line.trim();
     rpcOpts[line.split("=", 2)[0].toLowerCase()] = line.split("=", 2)[1];
