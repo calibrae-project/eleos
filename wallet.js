@@ -10,9 +10,9 @@ var config = require('./main.js').getConfig();
 var coinConf;
 
 if ((config.confPathWin.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathMacOS.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathLinux.length > 0 && fs.existsSync(config.confPathWin))) {
-    if (os.platform === 'win32') coinConf = config.confPathWin;
-    if (os.platform === 'darwin') coinConf = config.confPathMacOS;
-    if (os.platform === 'linux') coinConf = config.confPathLinux;
+    if (os.platform() === 'win32') coinConf = config.confPathWin;
+    if (os.platform() === 'darwin') coinConf = config.confPathMacOS;
+    if (os.platform() === 'linux') coinConf = config.confPathLinux;
 }
 else {
     if ((config.coin.toLowerCase() === 'zcl') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {

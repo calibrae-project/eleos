@@ -7,6 +7,7 @@ const os = require('os');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 const tcpPortUsed = require('tcp-port-used');
+const tar = require('tar-fs');
 
 const crypto = require('crypto');
 const request = require('request');
@@ -244,6 +245,14 @@ function getFileLocationOpts(title) {
     return options;
 }
 
+function getSaveLocationOpts(title, filename) {
+    let options = {};
+    options.title = title;
+    options.defaultPath = app.getPath('home') + '/' + filename;
+    options["properties"] = ['showHiddenFiles', 'openFile'];
+    return options;
+}
+
 function binaryPathCB(path) {
     if (!path) return;
     path = path[0];
@@ -298,14 +307,90 @@ function createWindow() {
         {
             label: 'File',
             submenu: [
-                /*
                  {
-                 label: 'Backup Wallet'
+                 label: 'Import Wallet',
+                     click() {
+                         dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallet.tar'), function (path) {
+                             var tarball = fs.createReadStream(path[0]);
+
+                             // get Zclassic path and backup current wallet
+                             var zclPath;
+                             if ((os.platform() === 'win32') || (os.platform() === 'darwin')) zclPath = app.getPath('appData') + '/' + 'Zclassic/wallet.dat';
+                             if (os.platform() === 'linux') zclPath = app.getPath('home') + '/' + './zclassic/wallet.dat';
+                             if (fs.existsSync(zclPath)) {
+                                 let newPath = zclPath + '.bak-' + new Date().getTime();
+                                 fs.createReadStream(zclPath).pipe(fs.createWriteStream(newPath));
+                             }
+
+                             // get Zcash path and backup current wallet
+                             var zecPath;
+                             if (os.platform() === 'win32' || os.platform() === 'darwin') zecPath = app.getPath('appData') + '/' + 'Zcash/wallet.dat';
+                             if (os.platform() === 'linux') zecPath = app.getPath('home') + '/' + './zcash/wallet.dat';
+                             if (fs.existsSync(zecPath)) {
+                                 let newPath =  zecPath + '.bak-' + new Date().getTime();
+                                 fs.createReadStream(zecPath).pipe(fs.createWriteStream(newPath));
+                             }
+
+                             tarball.pipe(tar.extract('/', {
+                                 map: function(header) {
+                                     if (header.name.toLowerCase().search('zcl') !== -1) {
+                                         header.name = zclPath;
+                                     } else if (header.name.toLowerCase().search('zec') !== -1) {
+                                         header.name = zecPath;
+                                     }
+                                     return header
+                                 }
+                             }));
+
+                             dialog.showMessageBox(null, {type: 'info', title: 'Import complete.', message: 'Press ok to restart wallet.'});
+                             app.quit();
+                        });
+                     }
                  },
-                 {
-                 label: 'Encrypt Wallet'
-                 },
-                 */
+                {
+                    label: 'Backup Wallet',
+                    click() {
+                        dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallet.tar'), function (path) {
+                            var pack = tar.pack();
+                            var tarball = fs.createWriteStream(path);
+                            var entries = [];
+
+                            // get Zclassic path
+                            var zclPath;
+                            if ((os.platform() === 'win32') || (os.platform() === 'darwin')) zclPath = app.getPath('appData') + '/' + 'Zclassic/wallet.dat';
+                            if (os.platform() === 'linux') zclPath = app.getPath('home') + '/' + './zclassic/wallet.dat';
+                            if (fs.existsSync(zclPath)) {
+                                entries.push(zclPath);
+                            }
+
+                            // get Zcash path
+                            var zecPath;
+                            if (os.platform() === 'win32' || os.platform() === 'darwin') zecPath = app.getPath('appData') + '/' + 'Zcash/wallet.dat';
+                            if (os.platform() === 'linux') zecPath = app.getPath('home') + '/' + './zcash/wallet.dat';
+                            if (fs.existsSync(zecPath)) {
+                                entries.push(zecPath);
+                            }
+
+                            // save renamed wallet.dat files into tarball
+                            pack = tar.pack('/', {
+                                entries: entries,
+                                map: function(header) {
+                                    if (header.name.toLowerCase().search('zclassic') !== -1) {
+                                        header.name = './zcl-wallet.dat';
+                                    }
+                                    if (header.name.toLowerCase().search('zcash') !== -1) {
+                                        header.name = './zec-wallet.dat';
+                                    }
+                                    return header
+                                },
+                                mapStream: function (fileStream, header) {
+                                    return fileStream;
+                                }
+                            }).pipe(tarball);
+                        }
+                    )}
+                },
+                {type: "separator"},
                 {
                     label: 'Quit',
                     click() {

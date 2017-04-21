@@ -24,6 +24,7 @@
     "tableify": "*",
     "request": "*",
     "request-progress": "*",
+    "tar-fs": "*",
     "tcp-port-used": "*",
     "xterm": "*"
   },
