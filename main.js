@@ -254,7 +254,7 @@ function getSaveLocationOpts(title, filename) {
 }
 
 function binaryPathCB(path) {
-    if (!path) return;
+    if (!path || !path[0]) return;
     path = path[0];
     console.log('Setting binary path to: ' + path);
     if (os.platform() === 'win32') {
@@ -270,7 +270,7 @@ function binaryPathCB(path) {
 }
 
 function confPathCB(path) {
-    if (!path) return;
+    if (!path || !path[0]) return;
     path = path[0];
     console.log('Setting coin configuration path to: ' + path);
     if (os.platform() === 'win32') {
@@ -311,6 +311,8 @@ function createWindow() {
                  label: 'Import Wallet',
                      click() {
                          dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallet.tar'), function (path) {
+                             if (!path || !path[0]) return;
+
                              var tarball = fs.createReadStream(path[0]);
 
                              // get Zclassic path and backup current wallet
@@ -351,6 +353,8 @@ function createWindow() {
                     label: 'Backup Wallet',
                     click() {
                         dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallet.tar'), function (path) {
+                            if (!path || !path[0]) return;
+
                             var pack = tar.pack();
                             var tarball = fs.createWriteStream(path);
                             var entries = [];
