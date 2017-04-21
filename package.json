@@ -1,6 +1,6 @@
 {
   "name": "Eleos",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A minimal Equihash wallet",
   "main": "main.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "zcash",
     "wallet"
   ],
-  "author": "@dresdan",
+  "author": "@joshuayabut",
   "license": "CPAL",
   "dependencies": {
     "express": "*",
