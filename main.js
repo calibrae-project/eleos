@@ -429,9 +429,9 @@ function createWindow() {
     Menu.setApplicationMenu(menu);
 
     mainWindow = new BrowserWindow({
-        'minWidth': 780,
+        'minWidth': 840,
         'minHeight': 480,
-        'width': 780,
+        'width': 840,
         'height': 480,
         icon: 'resources/' + config.coin.toLowerCase() + '.png'
     });

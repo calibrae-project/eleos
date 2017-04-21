@@ -123,6 +123,16 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
     if (arg.id === 'getnetworkinfo' && arg.result) {
         document.getElementById("connectionsValue").innerHTML = arg.result.connections;
     }
+    else if (arg.id === 'getblockchaininfo' && arg.result) {
+        let status = ((arg.result.blocks / arg.result.headers) * 100).toFixed(1);
+        document.getElementById("syncStatusValue").innerHTML = status;
+        if (status < 100) {
+            document.getElementById("syncStatusLabel").style.backgroundColor = 'yellow';
+        }
+        else {
+            document.getElementById("syncStatusLabel").style.backgroundColor = '';
+        }
+    }
     else if (arg.id === 'z_gettotalbalance' && arg.result) {
         document.getElementById("currentBalanceValue").innerHTML = arg.result.total;
         document.getElementById("transparentBalanceValue").innerHTML = arg.result.transparent;
@@ -146,7 +156,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         }
         genHistory.transparent = true;
     }
-    if (arg.id === 'listaddressgroupings' && arg.result) {
+    else if (arg.id === 'listaddressgroupings' && arg.result) {
         let table = [];
         let ctr = 0;
         for (let i = 0; i < arg.result.length; i++) {
@@ -301,6 +311,7 @@ function refreshUI() {
     ipcRenderer.send('check-params');
     ipcRenderer.send('check-config');
     ipcRenderer.send('check-wallet');
+    generateQuery('getblockchaininfo', []);
 
     // for receivePage
     generateQuery('listreceivedbyaddress', [0, true]);

@@ -16,6 +16,7 @@ var terminalContainer = document.getElementById('terminal-container'),
     rowsElement = document.getElementById('rows');
 
 createTerminal();
+term.fit();
 
 function createTerminal() {
   // Clean terminal
