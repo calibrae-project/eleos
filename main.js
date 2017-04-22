@@ -333,7 +333,10 @@ function createWindow() {
                                  fs.createReadStream(zecPath).pipe(fs.createWriteStream(newPath));
                              }
 
-                             tarball.pipe(tar.extract('/', {
+                             let extractDir;
+                             if (os.platform() === 'win32') extractDir = '';
+                             else extractDir = '/';
+                             tarball.pipe(tar.extract(extractDir, {
                                  map: function(header) {
                                      if (header.name.toLowerCase().search('zcl') !== -1) {
                                          header.name = zclPath;
@@ -355,7 +358,7 @@ function createWindow() {
                         dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallet.tar'), function (path) {
                             if (!path || !path[0]) return;
 
-                            var pack = tar.pack();
+                            var pack;
                             var tarball = fs.createWriteStream(path);
                             var entries = [];
 
@@ -376,7 +379,10 @@ function createWindow() {
                             }
 
                             // save renamed wallet.dat files into tarball
-                            pack = tar.pack('/', {
+                            let packDir;
+                            if (os.platform() === 'win32') packDir = '';
+                            else packDir = '/';
+                            pack = tar.pack(packDir, {
                                 entries: entries,
                                 map: function(header) {
                                     if (header.name.toLowerCase().search('zclassic') !== -1) {
