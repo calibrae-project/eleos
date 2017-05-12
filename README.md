@@ -16,11 +16,29 @@ The simplest way to get started on Windows or MacOS is to [download and run the 
 
 ##### Linux
 Note: Eleos requires that the compiled wallets are named zcashd-linux or zcld-linux and are saved into the eleos directory.
-  1. Build Zclassic or Zcash wallet from Source
-  2. Run `git clone https://github.com/zencashio/eleos.git eleos`
-  3. Copy the Zclassic or Zcash wallet daemon into the eleos directory (name the binary zcld-linux or zcashd-linux).
-  4. Start Eleos: `cd eleos` and `npm start`
+Get the dependencies
+```
+sudo apt-get install node.js nodejs-legacy npm
+npm install electron tcp-port-used tar-fs request-progress ht-auth express-ws node-pty
+```
 
+Get the source
+```
+git clone https://github.com/zencashio/eleos.git eleos
+```
+
+Copy the Zclassic/Zcash wallet daemon into the elos directory (name the binary zcld-linux or zcashd-linux)
+```
+cp ~/Builds/zclassic/src/zcashd ~/Builds/elos/zcld-linux
+```
+or
+```
+cp ~/Builds/zcash/src/zcashd ~/Builds/elos/zcashd-linux
+```
+Start eleos
+```
+cd ~/Builds/eleos && npm start
+```
 
 ### Supported Wallets
 
