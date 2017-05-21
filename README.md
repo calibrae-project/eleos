@@ -67,4 +67,4 @@ Want to contribute? Great! We need help.
   - Other: Submit a Github issue as needed.
 
 ### License
-Common Public Attribution License (CPAL)
+Common Public Attribution License (CPAL-1.0)

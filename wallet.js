@@ -4,10 +4,10 @@ const os = require('os');
 const readline = require('readline');
 const request = require('request');
 
-var config = require('./main.js').getConfig();
+let config = require('./main.js').getConfig();
 
 // set default coin config location
-var coinConf;
+let coinConf;
 
 if ((config.confPathWin.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathMacOS.length > 0 && fs.existsSync(config.confPathWin)) || (config.confPathLinux.length > 0 && fs.existsSync(config.confPathWin))) {
     if (os.platform() === 'win32') coinConf = config.confPathWin;
@@ -38,9 +38,9 @@ else {
 }
 
 // get config options from wallet daemon file
-var rl;
-var rpcOpts = {};
-var rpcUser, rpcPassword, rpcIP, rpcPort;
+let rl;
+let rpcOpts = {};
+let rpcUser, rpcPassword, rpcIP, rpcPort;
 if (!fs.existsSync(coinConf)) {
     console.log('Invalid path for wallet config file. Check config.json for accuracy.');
     return;
@@ -58,20 +58,36 @@ rl.on('close', () => {
     rpcUser = rpcOpts.rpcuser ? rpcOpts.rpcuser : config.rpcUser;
     rpcPassword = rpcOpts.rpcpassword ? rpcOpts.rpcpassword : config.rpcPassword;
     rpcIP = config.rpcIP.length > 0 ? config.rpcIP : '127.0.0.1';
-    rpcPort = rpcOpts.rpcport ? rpcOpts.rpcport : (config.rpcPort.length > 0 ? config.rpcPort : (config.coin == 'zcl' ? 8232 : 8233));
+    //rpcPort = rpcOpts.rpcport ? rpcOpts.rpcport : (config.rpcPort.length > 0 ? config.rpcPort : (config.coin == 'zcl' ? 8232 : 8233));
+    if (rpcOpts.rpcport) {
+        rpcPort = rpcOpts.rpcport;
+    } else {
+        if (config.rpcPort.length > 0) {
+            rpcPort = config.rpcPort;
+        } else {
+            if (config.coin == 'zcl') {
+                rpcPort = 8232;
+            } else if (config.coin == 'zec') {
+                rpcPort = 8233;
+            } else if (config.coin == 'zen') {
+                // TODO: Check port number!
+                rpcPort = 8234;
+            }
+        }
+    }
 
     // authentication for terminal
-    var HtAuth = require('ht-auth'),
+    let HtAuth = require('ht-auth'),
         htAuth = HtAuth.create({file: (app.getPath('userData') + '/eleos.htpasswd')});
-        htAuth.add({username: rpcUser, password: rpcPassword, force: true}, function (err) {
-            // initialize xtermjs
-            const term = require('./xterm.js');
-        });
+    htAuth.add({username: rpcUser, password: rpcPassword, force: true}, function (err) {
+        // initialize xtermjs
+        const term = require('./xterm.js');
+    });
 });
 
 function jsonQuery(query, callback) {
     if (rpcUser.length === 0 || rpcPassword.length === 0 || rpcIP.length === 0 || rpcPort.length === 0) return;
-    var options  = {
+    let options = {
         method: 'POST',
         url: encodeURI('http://' + rpcUser + ':' + rpcPassword + '@' + rpcIP + ':' + rpcPort),
         headers: {
@@ -91,13 +107,13 @@ function jsonQuery(query, callback) {
 }
 
 ipcMain.on('jsonQuery-request', (event, query) => {
-    jsonQuery(query, function(response) {
+    jsonQuery(query, function (response) {
         event.sender.send('jsonQuery-reply', response);
     });
 });
 
 ipcMain.on('jsonQuery-request-sync', (event, query) => {
-    jsonQuery(query, function(response) {
+    jsonQuery(query, function (response) {
         event.returnValue = response;
     });
 });
@@ -110,4 +126,4 @@ function getCredentials() {
     return {rpcUser: rpcUser, rpcPassword: rpcPassword, rpcIP: rpcIP, rpcPort: rpcPort};
 }
 
-module.exports = { getCredentials, jsonQuery };
+module.exports = {getCredentials, jsonQuery};

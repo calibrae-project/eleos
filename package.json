@@ -15,7 +15,7 @@
     "wallet"
   ],
   "author": "@joshuayabut",
-  "license": "CPAL",
+  "license": "CPAL-1.0",
   "dependencies": {
     "express": "*",
     "express-ws": "*",
