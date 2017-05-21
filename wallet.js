@@ -21,11 +21,19 @@ else {
     else if (config.coin.toLowerCase() === 'zcl') {
         coinConf = app.getPath('home') + '/.zclassic/zclassic.conf';
     }
+
     if ((config.coin.toLowerCase() === 'zec') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
         coinConf = app.getPath('appData') + '/Zcash/zcash.conf';
     }
     else if (config.coin.toLowerCase() === 'zec') {
         coinConf = app.getPath('home') + '/.zcash/zcash.conf';
+    }
+
+    if ((config.coin.toLowerCase() === 'zen') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
+        coinConf = app.getPath('appData') + '/Zencas/zencash.conf';
+    }
+    else if (config.coin.toLowerCase() === 'zen') {
+        coinConf = app.getPath('home') + '/.zencash/zencash.conf';
     }
 }
 

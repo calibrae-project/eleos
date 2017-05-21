@@ -48,7 +48,7 @@ Eleos is primarily designed for Zcash-based cryptocurrencies. The wallet.dat for
 | ------ | ------ | ------ | ------ |
 | Zclassic | Fully supported | %APPDATA%/Zclassic | ~/Library/Application Support/Zclassic |
 | Zcash | Fully supported | %APPDATA%/Zcash | ~/Library/Application Support/Zcash |
-| Zen | Not yet supported | | |
+| Zencash | alpha version | %APPDATA%/Zencash | ~/Library/Application Support/Zencash |
 
 
 ### Development

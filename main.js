@@ -98,19 +98,21 @@ function checkCoinConfig(callback) {
     // return if config not yet initialized
     if (!config || !config.coin) return;
 
-    // generic locations for zclassic and zcash
-    let zclPath, zecPath;
+    // generic locations for zclassic, zcash, and zencash
+    let zclPath, zecPath, zenPath;
     if ((os.platform() === 'win32') || (os.platform() === 'darwin')) {
         zclPath = '/Zclassic';
         zecPath = '/Zcash';
+        zenPath = '/Zencash';
     }
     else {
         zclPath = '/.zclassic';
         zecPath = '/.zcash';
+        zenPath = '/.zencash';
     }
 
     // check if coin configuration files exist and if not write them
-    if ((config.coin.toLowerCase() !== 'zec') && (!fs.existsSync(app.getPath('appData') + zclPath + '/zclassic.conf'))) {
+    if ((config.coin.toLowerCase() === 'zcl') && (!fs.existsSync(app.getPath('appData') + zclPath + '/zclassic.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zclPath)) fs.mkdirSync(app.getPath('appData') + zclPath);
         let data = [
             'rpcuser=zclrpc',
@@ -127,6 +129,17 @@ function checkCoinConfig(callback) {
             'rpcport=8233'
         ];
         fs.writeFileSync(app.getPath('appData') + zecPath + '/zcash.conf', data.join('\n'));
+    }
+    if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zencash.conf'))) {
+        if (!fs.existsSync(app.getPath('appData') + zenPath)) fs.mkdirSync(app.getPath('appData') + zenPath);
+
+        // TODO: check rpcport number!
+        let data = [
+            'rpcuser=zenrpc',
+            'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
+            'rpcport=8234'
+        ];
+        fs.writeFileSync(app.getPath('appData') + zenPath + '/zencash.conf', data.join('\n'));
     }
     if (typeof callback === "function") callback();
 }
@@ -216,6 +229,19 @@ function startWallet() {
             var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
         }
     }
+    // if not then try zen
+    else if (config.coin.toLowerCase() === 'zen') {
+        if (os.platform() === 'win32') {
+            var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zend.exe');
+        }
+        else if (os.platform() === 'darwin') {
+            var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zend-mac');
+        }
+        else if (os.platform() === 'linux') {
+            var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zend-linux');
+        }
+    }
+
 
     // check if wallet binary exists first
     if (!fs.existsSync(cmd)) {
@@ -333,6 +359,15 @@ function createWindow() {
                                  fs.createReadStream(zecPath).pipe(fs.createWriteStream(newPath));
                              }
 
+                             // get Zencash path and backup current wallet
+                             var zenPath;
+                             if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zencash/wallet.dat';
+                             if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zencash/wallet.dat';
+                             if (fs.existsSync(zenPath)) {
+                                 let newPath =  zenPath + '.bak-' + new Date().getTime();
+                                 fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
+                             }
+
                              let extractDir;
                              if (os.platform() === 'win32') extractDir = '';
                              else extractDir = '/';
@@ -342,6 +377,8 @@ function createWindow() {
                                          header.name = zclPath;
                                      } else if (header.name.toLowerCase().search('zec') !== -1) {
                                          header.name = zecPath;
+                                     } else if (header.name.toLowerCase().search('zen') !== -1) {
+                                         header.name = zenPath;
                                      }
                                      return header
                                  }
@@ -378,6 +415,14 @@ function createWindow() {
                                 entries.push(zecPath);
                             }
 
+                            // get Zencash path
+                            var zenPath;
+                            if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zencash/wallet.dat';
+                            if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zencash/wallet.dat';
+                            if (fs.existsSync(zenPath)) {
+                                entries.push(zenPath);
+                            }
+
                             // save renamed wallet.dat files into tarball
                             let packDir;
                             if (os.platform() === 'win32') packDir = '';
@@ -390,6 +435,9 @@ function createWindow() {
                                     }
                                     if (header.name.toLowerCase().search('zcash') !== -1) {
                                         header.name = './zec-wallet.dat';
+                                    }
+                                    if (header.name.toLowerCase().search('zencash') !== -1) {
+                                        header.name = './zen-wallet.dat';
                                     }
                                     return header
                                 },
@@ -448,8 +496,18 @@ function createWindow() {
                                 dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
                                 app.quit();
                             }
+                        },
+                        {
+                            label: 'Zencash (ZEN)',
+                            type: 'radio',
+                            checked: (config.coin.toLowerCase() === 'zen'),
+                            click() {
+                                config.coin = 'zen';
+                                writeConfig(JSON.stringify(config, null, 4));
+                                dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                                app.quit();
+                            }
                         }
-
                     ]
                 },
                 {
