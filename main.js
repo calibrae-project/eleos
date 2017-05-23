@@ -121,7 +121,7 @@ function checkCoinConfig(callback) {
         ];
         fs.writeFileSync(app.getPath('appData') + zclPath + '/zclassic.conf', data.join('\n'));
     }
-    if ((config.coin.toLowerCase() === 'zec') && (!fs.existsSync(app.getPath('appData') + zecPath + '/zcash.conf'))) {
+    else if ((config.coin.toLowerCase() === 'zec') && (!fs.existsSync(app.getPath('appData') + zecPath + '/zcash.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zecPath)) fs.mkdirSync(app.getPath('appData') + zecPath);
         let data = [
             'rpcuser=zcashrpc',
@@ -130,7 +130,7 @@ function checkCoinConfig(callback) {
         ];
         fs.writeFileSync(app.getPath('appData') + zecPath + '/zcash.conf', data.join('\n'));
     }
-    if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zencash.conf'))) {
+    else if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zencash.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zenPath)) fs.mkdirSync(app.getPath('appData') + zenPath);
         let data = [
             'rpcuser=zenrpc',
@@ -156,7 +156,6 @@ function checkConfig(callback) {
             });
         });
     }
-    //
     else {
         config = require(app.getPath('userData') + '/config.json');
         checkCoinConfig(function () {
@@ -246,7 +245,8 @@ function startWallet() {
     if (!fs.existsSync(cmd)) {
         dialog.showErrorBox('Could not find wallet daemon', 'Double-check the configuration settings.');
         app.quit();
-    } else {
+    }
+    else {
         console.log('starting wallet');
         if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
             try {
