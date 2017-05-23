@@ -132,12 +132,10 @@ function checkCoinConfig(callback) {
     }
     if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zencash.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zenPath)) fs.mkdirSync(app.getPath('appData') + zenPath);
-
-        // TODO: check rpcport number!
         let data = [
             'rpcuser=zenrpc',
             'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
-            'rpcport=8234'
+            'rpcport=8231'
         ];
         fs.writeFileSync(app.getPath('appData') + zenPath + '/zencash.conf', data.join('\n'));
     }

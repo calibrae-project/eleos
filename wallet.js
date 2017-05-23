@@ -70,8 +70,7 @@ rl.on('close', () => {
             } else if (config.coin == 'zec') {
                 rpcPort = 8233;
             } else if (config.coin == 'zen') {
-                // TODO: Check port number!
-                rpcPort = 8234;
+                rpcPort = 8231;
             }
         }
     }
