@@ -40,6 +40,12 @@ Start eleos
 cd ~/Builds/eleos && npm start
 ```
 
+For mac, the files are located in:
+```
+/Applications/eleos.app/Contents/Resources/app
+```
+
+
 ### Supported Wallets
 
 Eleos is primarily designed for Zcash-based cryptocurrencies. The wallet.dat for each cryptocurrency is stored in the directories below.
