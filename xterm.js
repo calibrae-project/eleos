@@ -1,7 +1,7 @@
 let express = require('express');
 let getUserDataDir = require('./main.js').getUserDataDir();
 let app = express();
-// let expressWs = require('express-ws')(app); // Unused
+let expressWs = require('express-ws')(app);
 let os = require('os');
 let pty = require('node-pty');
 
