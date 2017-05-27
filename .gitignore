@@ -71,4 +71,6 @@ typings/
 # dotenv environment variables file
 .env
 
+# Clion IDE
 cmake-build-debug/
+CMakeLists.txt

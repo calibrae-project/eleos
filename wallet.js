@@ -30,10 +30,10 @@ else {
     }
 
     if ((config.coin.toLowerCase() === 'zen') && ((os.platform() === 'win32') || (os.platform() === 'darwin'))) {
-        coinConf = app.getPath('appData') + '/Zencas/zencash.conf';
+        coinConf = app.getPath('appData') + '/Zen/zen.conf';
     }
     else if (config.coin.toLowerCase() === 'zen') {
-        coinConf = app.getPath('home') + '/.zencash/zencash.conf';
+        coinConf = app.getPath('home') + '/.zen/zen.conf';
     }
 }
 
@@ -42,7 +42,7 @@ let rl;
 let rpcOpts = {};
 let rpcUser, rpcPassword, rpcIP, rpcPort;
 if (!fs.existsSync(coinConf)) {
-    console.log('Invalid path for wallet config file. Check config.json for accuracy.');
+    console.log('Invalid path ' + coinConf + ' for wallet config file. Check config.json for accuracy.');
     return;
 }
 else {
