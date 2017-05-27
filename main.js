@@ -26,6 +26,7 @@ let keyVerification = {
     verifyingDownloading: false
 };
 let configComplete = false;
+let data;
 
 function getFileHash(path, callback) {
     const hash = crypto.createHash('sha256');
@@ -57,6 +58,7 @@ function fileDownload(url, path, callback) {
         })
         .on('error', function (err) {
             dialog.showErrorBox('Error downloading file', 'There was an error trying to download ' + downloadProgress.name);
+            console.log(err);
         })
         .on('end', function () {
             paramsPending = false;
@@ -103,12 +105,12 @@ function checkCoinConfig(callback) {
     if ((os.platform() === 'win32') || (os.platform() === 'darwin')) {
         zclPath = '/Zclassic';
         zecPath = '/Zcash';
-        zenPath = '/Zencash';
+        zenPath = '/Zen';
     }
     else {
         zclPath = '/.zclassic';
         zecPath = '/.zcash';
-        zenPath = '/.zencash';
+        zenPath = '/.zen';
     }
 
     // check if coin configuration files exist and if not write them
@@ -130,14 +132,14 @@ function checkCoinConfig(callback) {
         ];
         fs.writeFileSync(app.getPath('appData') + zecPath + '/zcash.conf', data.join('\n'));
     }
-    else if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zencash.conf'))) {
+    else if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zen.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zenPath)) fs.mkdirSync(app.getPath('appData') + zenPath);
         let data = [
             'rpcuser=zenrpc',
             'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
             'rpcport=8231'
         ];
-        fs.writeFileSync(app.getPath('appData') + zenPath + '/zencash.conf', data.join('\n'));
+        fs.writeFileSync(app.getPath('appData') + zenPath + '/zen.conf', data.join('\n'));
     }
     if (typeof callback === "function") callback();
 }
@@ -334,9 +336,9 @@ function createWindow() {
             label: 'File',
             submenu: [
                 {
-                    label: 'Import Wallet',
+                    label: 'Import All Wallets',
                     click() {
-                        dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallet.tar'), function (path) {
+                        dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallets.tar'), function (path) {
                             if (!path || !path[0]) return;
 
                             let tarball = fs.createReadStream(path[0]);
@@ -361,8 +363,8 @@ function createWindow() {
 
                             // get Zencash path and backup current wallet
                             let zenPath;
-                            if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zencash/wallet.dat';
-                            if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zencash/wallet.dat';
+                            if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                            if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
                             if (fs.existsSync(zenPath)) {
                                 let newPath = zenPath + '.bak-' + new Date().getTime();
                                 fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
@@ -394,12 +396,11 @@ function createWindow() {
                     }
                 },
                 {
-                    label: 'Backup Wallet',
+                    label: 'Backup All Wallets',
                     click() {
-                        dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallet.tar'), function (path) {
+                        dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallets.tar'), function (path) {
                                 if (!path || !path[0]) return;
 
-                                let pack;
                                 let tarball = fs.createWriteStream(path);
                                 let entries = [];
 
@@ -421,17 +422,21 @@ function createWindow() {
 
                                 // get Zencash path
                                 let zenPath;
-                                if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zencash/wallet.dat';
-                                if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zencash/wallet.dat';
+                                if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                                if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
                                 if (fs.existsSync(zenPath)) {
                                     entries.push(zenPath);
                                 }
 
                                 // save renamed wallet.dat files into tarball
                                 let packDir;
-                                if (os.platform() === 'win32') packDir = '';
-                                else packDir = '/';
-                                pack = tar.pack(packDir, {
+                                if (os.platform() === 'win32') {
+                                    packDir = '';
+                                }
+                                else {
+                                    packDir = '/';
+                                }
+                                tar.pack(packDir, {
                                     entries: entries,
                                     map: function (header) {
                                         if (header.name.toLowerCase().search('zclassic') !== -1) {
@@ -444,9 +449,6 @@ function createWindow() {
                                             header.name = './zen-wallet.dat';
                                         }
                                         return header
-                                    },
-                                    mapStream: function (fileStream, header) {
-                                        return fileStream;
                                     }
                                 }).pipe(tarball);
                             }
@@ -455,9 +457,40 @@ function createWindow() {
                 },
                 {type: "separator"},
                 {
-                    label: 'Quit',
+                    label: 'Restore ZEN from ZCL wallet',
                     click() {
-                        app.quit()
+                        let result = dialog.showMessageBox({
+                            type: 'info',
+                            message: 'Are you sure? This restoration delete your current ZEN wallet!',
+                            buttons: ['No', 'Yes']
+                        });
+
+                        if (result){
+                            dialog.showOpenDialog(getFileLocationOpts('Import ZCL wallet.dat'), function (path) {
+                                if (!path || !path[0]) return;
+
+                                //let tarball = fs.createReadStream(path[0]);
+
+                                // get Zencash path and backup current wallet
+                                let zenPath;
+                                let ws;
+                                if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                                if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
+                                if (fs.existsSync(zenPath)) {
+                                    let newPath = zenPath + '.bak-' + new Date().getTime();
+                                    ws = fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
+                                }
+                                ws.on('finish', function(){
+                                    fs.createReadStream(path[0]).pipe(fs.createWriteStream(zenPath));
+                                });
+
+                                dialog.showMessageBox(null, {
+                                    type: 'info',
+                                    title: 'Restoration complete.',
+                                    message: 'You can switch to ZEN now.'
+                                });
+                            });
+                        }
                     }
                 }
             ]
@@ -543,14 +576,6 @@ function createWindow() {
                         clearConfig()
                     }
                 }
-                /*
-                 {
-                 label: 'Backup Wallet'
-                 },
-                 {
-                 label: 'Encrypt Wallet'
-                 }
-                 */
             ]
         }
     ];
@@ -647,7 +672,7 @@ app.on('login', (event, webContents, request, authInfo, callback) => {
     if (request.url === 'http://127.0.0.1:3000/console.html') callback(wallet.getCredentials().rpcUser, wallet.getCredentials().rpcPassword);
 });
 
-ipcMain.on('check-config', (event) => {
+ipcMain.on('check-config', function () {
     checkConfig();
 });
 
@@ -663,13 +688,14 @@ ipcMain.on('check-params', (event) => {
                 if (!inUse) zcashd = false;
             }, function (err) {
                 console.log('error polling rpc port');
+                console.log(err);
                 zcashd = false;
             });
         event.sender.send('params-complete', Boolean(zcashd));
     }
 });
 
-ipcMain.on('check-wallet', (event) => {
+ipcMain.on('check-wallet', function () {
     if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true)) {
         startWallet();
     }

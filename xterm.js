@@ -96,7 +96,7 @@ app.ws('/terminals/:pid', function (ws, req) {
     });
 });
 
-let port = process.env.PORT || 3000,
-    host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
+let port = process.env.PORT || 3000;
+let host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
 
 app.listen(port, host);
