@@ -217,7 +217,7 @@ input[type=checkbox].w3-check:disabled+.w3-validate,input[type=radio].w3-radio:d
 .w3-container{padding:0.01em 16px}
 .w3-panel{padding:0.01em 16px;margin-top:16px!important;margin-bottom:16px!important}
 .w3-example{background-color:#f1f1f1;padding:0.01em 16px}
-.w3-code,.w3-codespan{font-family:Consolas,"courier new";font-size:16px}
+.w3-code,.w3-codespan{font-family: Consolas, "courier new", monospace;font-size:16px}
 .w3-code{line-height:1.4;width:auto;background-color:#fff;padding:8px 12px;border-left:4px solid #4CAF50;word-wrap:break-word}
 .w3-codespan{color:crimson;background-color:#f1f1f1;padding-left:4px;padding-right:4px;font-size:110%}
 .w3-example,.w3-code{margin:20px 0}.w3-card{border:1px solid #ccc}
