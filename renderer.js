@@ -359,7 +359,7 @@ function refreshUI() {
     if (options.length !== oldOptions.length) {
         different = true;
     }
-    else if (options.length == oldOptions.length) {
+    else if (options.length === oldOptions.length) {
         for (let i = 0; i < options.length; i++) {
             if (options[i].value !== oldOptions[i].value) {
                 different = true;

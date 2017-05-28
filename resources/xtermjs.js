@@ -85,9 +85,9 @@ function runFakeTerminal() {
             !ev.altKey && !ev.altGraphKey && !ev.ctrlKey && !ev.metaKey
         );
 
-        if (ev.keyCode == 13) {
+        if (ev.keyCode === 13) {
             term.prompt();
-        } else if (ev.keyCode == 8) {
+        } else if (ev.keyCode === 8) {
             // Do not delete the prompt
             if (term.x > 2) {
                 term.write('\b \b');

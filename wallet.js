@@ -65,11 +65,11 @@ rl.on('close', () => {
         if (config.rpcPort.length > 0) {
             rpcPort = config.rpcPort;
         } else {
-            if (config.coin == 'zcl') {
+            if (config.coin === 'zcl') {
                 rpcPort = 8232;
-            } else if (config.coin == 'zec') {
+            } else if (config.coin === 'zec') {
                 rpcPort = 8233;
-            } else if (config.coin == 'zen') {
+            } else if (config.coin === 'zen') {
                 rpcPort = 8231;
             }
         }
