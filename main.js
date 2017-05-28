@@ -469,8 +469,6 @@ function createWindow() {
                             dialog.showOpenDialog(getFileLocationOpts('Import ZCL wallet.dat'), function (path) {
                                 if (!path || !path[0]) return;
 
-                                //let tarball = fs.createReadStream(path[0]);
-
                                 // get Zencash path and backup current wallet
                                 let zenPath;
                                 let ws;
