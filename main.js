@@ -1,5 +1,5 @@
 const electron = require('electron');
-const {app, dialog, ipcMain, Menu } = require('electron');
+const {app, dialog, ipcMain, Menu} = require('electron');
 const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
@@ -13,19 +13,20 @@ const crypto = require('crypto');
 const request = require('request');
 const progress = require('request-progress');
 
-var config;
-var wallet;
-var mainWindow;
-var zcashd;
-var downloadProgress = {};
-var paramsPending = false;
-var keyVerification = {
+let config;
+let wallet;
+let mainWindow;
+let zcashd;
+let downloadProgress = {};
+let paramsPending = false;
+let keyVerification = {
     proving: false,
     provingDownloading: false,
     verifying: false,
     verifyingDownloading: false
 };
-var configComplete = false;
+let configComplete = false;
+let data;
 
 function getFileHash(path, callback) {
     const hash = crypto.createHash('sha256');
@@ -57,6 +58,7 @@ function fileDownload(url, path, callback) {
         })
         .on('error', function (err) {
             dialog.showErrorBox('Error downloading file', 'There was an error trying to download ' + downloadProgress.name);
+            console.log(err);
         })
         .on('end', function () {
             paramsPending = false;
@@ -98,19 +100,21 @@ function checkCoinConfig(callback) {
     // return if config not yet initialized
     if (!config || !config.coin) return;
 
-    // generic locations for zclassic and zcash
-    let zclPath, zecPath;
+    // generic locations for zclassic, zcash, and zencash
+    let zclPath, zecPath, zenPath;
     if ((os.platform() === 'win32') || (os.platform() === 'darwin')) {
         zclPath = '/Zclassic';
         zecPath = '/Zcash';
+        zenPath = '/Zen';
     }
     else {
         zclPath = '/.zclassic';
         zecPath = '/.zcash';
+        zenPath = '/.zen';
     }
 
     // check if coin configuration files exist and if not write them
-    if ((config.coin.toLowerCase() !== 'zec') && (!fs.existsSync(app.getPath('appData') + zclPath + '/zclassic.conf'))) {
+    if ((config.coin.toLowerCase() === 'zcl') && (!fs.existsSync(app.getPath('appData') + zclPath + '/zclassic.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zclPath)) fs.mkdirSync(app.getPath('appData') + zclPath);
         let data = [
             'rpcuser=zclrpc',
@@ -119,7 +123,7 @@ function checkCoinConfig(callback) {
         ];
         fs.writeFileSync(app.getPath('appData') + zclPath + '/zclassic.conf', data.join('\n'));
     }
-    if ((config.coin.toLowerCase() === 'zec') && (!fs.existsSync(app.getPath('appData') + zecPath + '/zcash.conf'))) {
+    else if ((config.coin.toLowerCase() === 'zec') && (!fs.existsSync(app.getPath('appData') + zecPath + '/zcash.conf'))) {
         if (!fs.existsSync(app.getPath('appData') + zecPath)) fs.mkdirSync(app.getPath('appData') + zecPath);
         let data = [
             'rpcuser=zcashrpc',
@@ -127,6 +131,15 @@ function checkCoinConfig(callback) {
             'rpcport=8233'
         ];
         fs.writeFileSync(app.getPath('appData') + zecPath + '/zcash.conf', data.join('\n'));
+    }
+    else if ((config.coin.toLowerCase() === 'zen') && (!fs.existsSync(app.getPath('appData') + zenPath + '/zen.conf'))) {
+        if (!fs.existsSync(app.getPath('appData') + zenPath)) fs.mkdirSync(app.getPath('appData') + zenPath);
+        let data = [
+            'rpcuser=zenrpc',
+            'rpcpassword=' + crypto.randomBytes(8).toString('hex'),
+            'rpcport=8231'
+        ];
+        fs.writeFileSync(app.getPath('appData') + zenPath + '/zen.conf', data.join('\n'));
     }
     if (typeof callback === "function") callback();
 }
@@ -137,7 +150,7 @@ function checkConfig(callback) {
 
     // if config.json doesn't exist then create a generic one
     if (!fs.existsSync(app.getPath('userData') + '/config.json')) {
-        clearConfig(function() {
+        clearConfig(function () {
             checkCoinConfig(function () {
                 configComplete = true;
                 checkParams();
@@ -145,10 +158,9 @@ function checkConfig(callback) {
             });
         });
     }
-    //
     else {
         config = require(app.getPath('userData') + '/config.json');
-        checkCoinConfig(function (){
+        checkCoinConfig(function () {
             configComplete = true;
             checkParams();
             if (typeof callback === "function") callback();
@@ -160,7 +172,7 @@ function checkParams() {
     if (keyVerification.verifying === true || keyVerification.proving === true ||
         paramsPending === true || keyVerification.verifyingDownloading === true ||
         keyVerification.provingDownloading === true) return;
-    if (!fs.existsSync(app.getPath('appData') + '/ZcashParams/')){
+    if (!fs.existsSync(app.getPath('appData') + '/ZcashParams/')) {
         fs.mkdirSync(app.getPath('appData') + '/ZcashParams/');
     }
     getFileHash(app.getPath('appData') + '/ZcashParams/sprout-verifying.key', function (result) {
@@ -171,9 +183,9 @@ function checkParams() {
             keyVerification.verifyingDownloading = true;
             fileDownload('https://z.cash/downloads/sprout-verifying.key', app.getPath('appData') + '/ZcashParams/sprout-verifying.key',
                 function () {
-                keyVerification.verifying = true;
-                keyVerification.verifyingDownloading = false;
-            });
+                    keyVerification.verifying = true;
+                    keyVerification.verifyingDownloading = false;
+                });
         }
     });
     getFileHash(app.getPath('appData') + '/ZcashParams/sprout-proving.key', function (result) {
@@ -184,36 +196,50 @@ function checkParams() {
             keyVerification.provingDownloading = true;
             fileDownload('https://z.cash/downloads/sprout-proving.key', app.getPath('appData') + '/ZcashParams/sprout-proving.key',
                 function () {
-                keyVerification.proving = true;
-                keyVerification.provingDownloading = false;
-            });
+                    keyVerification.proving = true;
+                    keyVerification.provingDownloading = false;
+                });
         }
     });
 }
 
 function startWallet() {
+    let cmd;
+
     // if we are configured for zcl then do zcl stuff bro
     if (config.coin.toLowerCase() === 'zcl' || config.coin.toLowerCase() === '') {
         if (os.platform() === 'win32') {
-            var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcld.exe');
+            cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcld.exe');
         }
         else if (os.platform() === 'darwin') {
-            var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcld-mac');
+            cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcld-mac');
         }
         else if (os.platform() === 'linux') {
-            var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcld-linux');
+            cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcld-linux');
         }
     }
     // if not then try zec
     else if (config.coin.toLowerCase() === 'zec') {
         if (os.platform() === 'win32') {
-            var cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcashd.exe');
+            cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zcashd.exe');
         }
         else if (os.platform() === 'darwin') {
-            var cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcashd-mac');
+            cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zcashd-mac');
         }
         else if (os.platform() === 'linux') {
-            var cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
+            cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zcashd-linux');
+        }
+    }
+    // if not then try zen
+    else if (config.coin.toLowerCase() === 'zen') {
+        if (os.platform() === 'win32') {
+            cmd = config.binaryPathWin.length > 0 ? config.binaryPathWin : (app.getAppPath() + '/zend.exe');
+        }
+        else if (os.platform() === 'darwin') {
+            cmd = config.binaryPathMacOS.length > 0 ? config.binaryPathMacOS : (app.getAppPath() + '/zend-mac');
+        }
+        else if (os.platform() === 'linux') {
+            cmd = config.binaryPathLinux.length > 0 ? config.binaryPathLinux : (app.getAppPath() + '/zend-linux');
         }
     }
 
@@ -221,7 +247,8 @@ function startWallet() {
     if (!fs.existsSync(cmd)) {
         dialog.showErrorBox('Could not find wallet daemon', 'Double-check the configuration settings.');
         app.quit();
-    } else {
+    }
+    else {
         console.log('starting wallet');
         if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
             try {
@@ -240,7 +267,7 @@ function getFileLocationOpts(title) {
     options.defaultPath = require('path').dirname(require.main.filename);
     options["properties"] = ['showHiddenFiles', 'openFile'];
     options["filters"] = [
-        { name: 'Executables', extensions: ['*'] }
+        {name: 'Executables', extensions: ['*']}
     ];
     return options;
 }
@@ -290,7 +317,8 @@ function showRPCOpts() {
     win.loadURL(url.format({
         pathname: path.join(__dirname, 'rpc.html'),
         protocol: 'file:',
-        slashes: true}));
+        slashes: true
+    }));
     win.once('ready-to-show', () => {
         win.show();
     })
@@ -307,104 +335,160 @@ function createWindow() {
         {
             label: 'File',
             submenu: [
-                 {
-                 label: 'Import Wallet',
-                     click() {
-                         dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallet.tar'), function (path) {
-                             if (!path || !path[0]) return;
-
-                             var tarball = fs.createReadStream(path[0]);
-
-                             // get Zclassic path and backup current wallet
-                             var zclPath;
-                             if ((os.platform() === 'win32') || (os.platform() === 'darwin')) zclPath = app.getPath('appData') + '/' + 'Zclassic/wallet.dat';
-                             if (os.platform() === 'linux') zclPath = app.getPath('home') + '/' + './zclassic/wallet.dat';
-                             if (fs.existsSync(zclPath)) {
-                                 let newPath = zclPath + '.bak-' + new Date().getTime();
-                                 fs.createReadStream(zclPath).pipe(fs.createWriteStream(newPath));
-                             }
-
-                             // get Zcash path and backup current wallet
-                             var zecPath;
-                             if (os.platform() === 'win32' || os.platform() === 'darwin') zecPath = app.getPath('appData') + '/' + 'Zcash/wallet.dat';
-                             if (os.platform() === 'linux') zecPath = app.getPath('home') + '/' + './zcash/wallet.dat';
-                             if (fs.existsSync(zecPath)) {
-                                 let newPath =  zecPath + '.bak-' + new Date().getTime();
-                                 fs.createReadStream(zecPath).pipe(fs.createWriteStream(newPath));
-                             }
-
-                             let extractDir;
-                             if (os.platform() === 'win32') extractDir = '';
-                             else extractDir = '/';
-                             tarball.pipe(tar.extract(extractDir, {
-                                 map: function(header) {
-                                     if (header.name.toLowerCase().search('zcl') !== -1) {
-                                         header.name = zclPath;
-                                     } else if (header.name.toLowerCase().search('zec') !== -1) {
-                                         header.name = zecPath;
-                                     }
-                                     return header
-                                 }
-                             }));
-
-                             dialog.showMessageBox(null, {type: 'info', title: 'Import complete.', message: 'Press ok to restart wallet.'});
-                             app.quit();
-                        });
-                     }
-                 },
                 {
-                    label: 'Backup Wallet',
+                    label: 'Import All Wallets',
                     click() {
-                        dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallet.tar'), function (path) {
+                        dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallets.tar'), function (path) {
                             if (!path || !path[0]) return;
 
-                            var pack;
-                            var tarball = fs.createWriteStream(path);
-                            var entries = [];
+                            let tarball = fs.createReadStream(path[0]);
 
-                            // get Zclassic path
-                            var zclPath;
+                            // get Zclassic path and backup current wallet
+                            let zclPath;
                             if ((os.platform() === 'win32') || (os.platform() === 'darwin')) zclPath = app.getPath('appData') + '/' + 'Zclassic/wallet.dat';
                             if (os.platform() === 'linux') zclPath = app.getPath('home') + '/' + './zclassic/wallet.dat';
                             if (fs.existsSync(zclPath)) {
-                                entries.push(zclPath);
+                                let newPath = zclPath + '.bak-' + new Date().getTime();
+                                fs.createReadStream(zclPath).pipe(fs.createWriteStream(newPath));
                             }
 
-                            // get Zcash path
-                            var zecPath;
+                            // get Zcash path and backup current wallet
+                            let zecPath;
                             if (os.platform() === 'win32' || os.platform() === 'darwin') zecPath = app.getPath('appData') + '/' + 'Zcash/wallet.dat';
                             if (os.platform() === 'linux') zecPath = app.getPath('home') + '/' + './zcash/wallet.dat';
                             if (fs.existsSync(zecPath)) {
-                                entries.push(zecPath);
+                                let newPath = zecPath + '.bak-' + new Date().getTime();
+                                fs.createReadStream(zecPath).pipe(fs.createWriteStream(newPath));
                             }
 
-                            // save renamed wallet.dat files into tarball
-                            let packDir;
-                            if (os.platform() === 'win32') packDir = '';
-                            else packDir = '/';
-                            pack = tar.pack(packDir, {
-                                entries: entries,
-                                map: function(header) {
-                                    if (header.name.toLowerCase().search('zclassic') !== -1) {
-                                        header.name = './zcl-wallet.dat';
-                                    }
-                                    if (header.name.toLowerCase().search('zcash') !== -1) {
-                                        header.name = './zec-wallet.dat';
+                            // get Zencash path and backup current wallet
+                            let zenPath;
+                            if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                            if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
+                            if (fs.existsSync(zenPath)) {
+                                let newPath = zenPath + '.bak-' + new Date().getTime();
+                                fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
+                            }
+
+                            let extractDir;
+                            if (os.platform() === 'win32') extractDir = '';
+                            else extractDir = '/';
+                            tarball.pipe(tar.extract(extractDir, {
+                                map: function (header) {
+                                    if (header.name.toLowerCase().search('zcl') !== -1) {
+                                        header.name = zclPath;
+                                    } else if (header.name.toLowerCase().search('zec') !== -1) {
+                                        header.name = zecPath;
+                                    } else if (header.name.toLowerCase().search('zen') !== -1) {
+                                        header.name = zenPath;
                                     }
                                     return header
-                                },
-                                mapStream: function (fileStream, header) {
-                                    return fileStream;
                                 }
-                            }).pipe(tarball);
-                        }
-                    )}
+                            }));
+
+                            dialog.showMessageBox(null, {
+                                type: 'info',
+                                title: 'Import complete.',
+                                message: 'Press ok to restart wallet.'
+                            });
+                            app.quit();
+                        });
+                    }
+                },
+                {
+                    label: 'Backup All Wallets',
+                    click() {
+                        dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallets.tar'), function (path) {
+                                if (!path || !path[0]) return;
+
+                                let tarball = fs.createWriteStream(path);
+                                let entries = [];
+
+                                // get Zclassic path
+                                let zclPath;
+                                if ((os.platform() === 'win32') || (os.platform() === 'darwin')) zclPath = app.getPath('appData') + '/' + 'Zclassic/wallet.dat';
+                                if (os.platform() === 'linux') zclPath = app.getPath('home') + '/' + './zclassic/wallet.dat';
+                                if (fs.existsSync(zclPath)) {
+                                    entries.push(zclPath);
+                                }
+
+                                // get Zcash path
+                                let zecPath;
+                                if (os.platform() === 'win32' || os.platform() === 'darwin') zecPath = app.getPath('appData') + '/' + 'Zcash/wallet.dat';
+                                if (os.platform() === 'linux') zecPath = app.getPath('home') + '/' + './zcash/wallet.dat';
+                                if (fs.existsSync(zecPath)) {
+                                    entries.push(zecPath);
+                                }
+
+                                // get Zencash path
+                                let zenPath;
+                                if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                                if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
+                                if (fs.existsSync(zenPath)) {
+                                    entries.push(zenPath);
+                                }
+
+                                // save renamed wallet.dat files into tarball
+                                let packDir;
+                                if (os.platform() === 'win32') {
+                                    packDir = '';
+                                }
+                                else {
+                                    packDir = '/';
+                                }
+                                tar.pack(packDir, {
+                                    entries: entries,
+                                    map: function (header) {
+                                        if (header.name.toLowerCase().search('zclassic') !== -1) {
+                                            header.name = './zcl-wallet.dat';
+                                        }
+                                        if (header.name.toLowerCase().search('zcash') !== -1) {
+                                            header.name = './zec-wallet.dat';
+                                        }
+                                        if (header.name.toLowerCase().search('zencash') !== -1) {
+                                            header.name = './zen-wallet.dat';
+                                        }
+                                        return header
+                                    }
+                                }).pipe(tarball);
+                            }
+                        )
+                    }
                 },
                 {type: "separator"},
                 {
-                    label: 'Quit',
+                    label: 'Restore ZEN from ZCL wallet',
                     click() {
-                        app.quit()
+                        let result = dialog.showMessageBox({
+                            type: 'info',
+                            message: 'Are you sure? This restoration delete your current ZEN wallet!',
+                            buttons: ['No', 'Yes']
+                        });
+
+                        if (result){
+                            dialog.showOpenDialog(getFileLocationOpts('Import ZCL wallet.dat'), function (path) {
+                                if (!path || !path[0]) return;
+
+                                // get Zencash path and backup current wallet
+                                let zenPath;
+                                let ws;
+                                if (os.platform() === 'win32' || os.platform() === 'darwin') zenPath = app.getPath('appData') + '/' + 'Zen/wallet.dat';
+                                if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
+                                if (fs.existsSync(zenPath)) {
+                                    let newPath = zenPath + '.bak-' + new Date().getTime();
+                                    ws = fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
+                                }
+                                ws.on('finish', function(){
+                                    fs.createReadStream(path[0]).pipe(fs.createWriteStream(zenPath));
+                                });
+
+                                dialog.showMessageBox(null, {
+                                    type: 'info',
+                                    title: 'Restoration complete.',
+                                    message: 'You can switch to ZEN now.'
+                                });
+                            });
+                        }
                     }
                 }
             ]
@@ -448,21 +532,37 @@ function createWindow() {
                                 dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
                                 app.quit();
                             }
+                        },
+                        {
+                            label: 'Zencash (ZEN)',
+                            type: 'radio',
+                            checked: (config.coin.toLowerCase() === 'zen'),
+                            click() {
+                                config.coin = 'zen';
+                                writeConfig(JSON.stringify(config, null, 4));
+                                dialog.showErrorBox('Restart wallet', 'Wallet must be restarted to switch coins.');
+                                app.quit();
+                            }
                         }
-
                     ]
                 },
                 {
                     label: 'Set Wallet Daemon',
-                    click() { dialog.showOpenDialog(getFileLocationOpts('Set Wallet Daemon Location'), binaryPathCB) }
+                    click() {
+                        dialog.showOpenDialog(getFileLocationOpts('Set Wallet Daemon Location'), binaryPathCB)
+                    }
                 },
                 {
                     label: 'Set Coin Config Location',
-                    click() { dialog.showOpenDialog(getFileLocationOpts('Set Coin Config Location'), confPathCB) }
+                    click() {
+                        dialog.showOpenDialog(getFileLocationOpts('Set Coin Config Location'), confPathCB)
+                    }
                 },
                 {
                     label: 'Set RPC Credentials',
-                    click() { showRPCOpts() }
+                    click() {
+                        showRPCOpts()
+                    }
                 },
                 {
                     label: 'separator',
@@ -470,16 +570,10 @@ function createWindow() {
                 },
                 {
                     label: 'Reset Configuration',
-                    click() { clearConfig() }
+                    click() {
+                        clearConfig()
+                    }
                 }
-                /*
-                 {
-                 label: 'Backup Wallet'
-                 },
-                 {
-                 label: 'Encrypt Wallet'
-                 }
-                 */
             ]
         }
     ];
@@ -545,7 +639,7 @@ function createWindow() {
 }
 
 
-app.on('ready', function() {
+app.on('ready', function () {
     checkConfig(createWindow);
 });
 
@@ -576,7 +670,7 @@ app.on('login', (event, webContents, request, authInfo, callback) => {
     if (request.url === 'http://127.0.0.1:3000/console.html') callback(wallet.getCredentials().rpcUser, wallet.getCredentials().rpcPassword);
 });
 
-ipcMain.on('check-config', (event) => {
+ipcMain.on('check-config', function () {
     checkConfig();
 });
 
@@ -592,13 +686,14 @@ ipcMain.on('check-params', (event) => {
                 if (!inUse) zcashd = false;
             }, function (err) {
                 console.log('error polling rpc port');
+                console.log(err);
                 zcashd = false;
             });
         event.sender.send('params-complete', Boolean(zcashd));
     }
 });
 
-ipcMain.on('check-wallet', (event) => {
+ipcMain.on('check-wallet', function () {
     if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true)) {
         startWallet();
     }
@@ -616,4 +711,4 @@ function getConfig() {
     return config;
 }
 
-module.exports = { getUserDataDir, getConfig };
+module.exports = {getUserDataDir, getConfig};

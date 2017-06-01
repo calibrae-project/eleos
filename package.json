@@ -8,13 +8,14 @@
   },
   "repository": "https://github.com/zencashio/eleos",
   "keywords": [
+    "zencash",
     "zclassic",
     "equihash",
     "zcash",
     "wallet"
   ],
   "author": "@joshuayabut",
-  "license": "CPAL",
+  "license": "CPAL-1.0",
   "dependencies": {
     "express": "*",
     "express-ws": "*",
@@ -30,6 +31,6 @@
   },
   "devDependencies": {
     "electron": "^1.4.1",
-    "electron-rebuild": "^1.5.7"
+    "electron-rebuild": "^1.5.11"
   }
 }

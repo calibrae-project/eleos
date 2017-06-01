@@ -9,13 +9,13 @@ h1 {
 }
 
 #terminal-container {
-    width: 800px;
-    height: 450px;
+    width: 790px;
+    height: 380px;
     margin: 0 auto;
     padding: 2px;
 }
 
-#terminal-container .terminal {
+#terminal-container.terminal {
     background-color: #111;
     color: #fafafa;
     padding: 2px;

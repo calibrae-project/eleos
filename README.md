@@ -40,6 +40,12 @@ Start eleos
 cd ~/Builds/eleos && npm start
 ```
 
+For mac, the files are located in:
+```
+/Applications/eleos.app/Contents/Resources/app
+```
+
+
 ### Supported Wallets
 
 Eleos is primarily designed for Zcash-based cryptocurrencies. The wallet.dat for each cryptocurrency is stored in the directories below.
@@ -48,7 +54,7 @@ Eleos is primarily designed for Zcash-based cryptocurrencies. The wallet.dat for
 | ------ | ------ | ------ | ------ |
 | Zclassic | Fully supported | %APPDATA%/Zclassic | ~/Library/Application Support/Zclassic |
 | Zcash | Fully supported | %APPDATA%/Zcash | ~/Library/Application Support/Zcash |
-| Zen | Not yet supported | | |
+| Zencash | Fully supported | %APPDATA%/Zen | ~/Library/Application Support/Zen |
 
 
 ### Development
@@ -67,4 +73,4 @@ Want to contribute? Great! We need help.
   - Other: Submit a Github issue as needed.
 
 ### License
-Common Public Attribution License (CPAL)
+Common Public Attribution License (CPAL-1.0)

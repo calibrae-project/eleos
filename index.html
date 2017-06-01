@@ -32,8 +32,8 @@
                     <form class="w3-container w3-margin-top w3-medium">
                         <div class="w3-container">
                             <label id="transparentAvailableField">Available Transparent Balance: </label><span class="" id="transparentAvailableValue"> </span> <span class="w3-small coin"></span><br /><br />
-                            <label id="transparentSendToField">Send To</label><input class="w3-input w3-round" type="text" id="transparentSendToValue"> </input>
-                            <label id="transparentAmountField">Amount</label><input class="w3-input w3-round" type="number" id="transparentAmountValue"> </input>
+                            <label id="transparentSendToField">Send To</label><input class="w3-input w3-round" type="text" id="transparentSendToValue" title="transparentSendToValue"/>
+                            <label id="transparentAmountField">Amount</label><input class="w3-input w3-round" type="number" id="transparentAmountValue" title="transparentAmountValue"/>
                         </div>
                         <div class="w3-container w3-center w3-margin-top">
                             <button type="button" id="transparentSendButton" onclick="sendTransparentTransaction()">Send</button>
@@ -44,10 +44,10 @@
                 <div class="page w3-container" id="sendPrivatePage">
                     <form class="w3-container w3-margin-top w3-medium">
                         <div class="w3-container">
-                            <label id="privateFromField">From</label><select class="w3-select w3-round w3-small" id="privateFromSelect"></select>
-                            <label id="privateSendToField">Send To</label><input class="w3-input w3-round" type="text" id="privateSendToValue"> </input>
-                            <label id="privateAmountField">Amount</label><input class="w3-input w3-round" type="number" id="privateAmountValue"> </input>
-                            <label id="privateMemoField">Encrypted Memo</label><input class="w3-input w3-round" type="text" id="privateMemoValue"> </input>
+                            <label id="privateFromField">From</label><select class="w3-select w3-round w3-small" id="privateFromSelect" title="privateFromSelect"></select>
+                            <label id="privateSendToField">Send To</label><input class="w3-input w3-round" type="text" id="privateSendToValue" title="privateSendToValue"/>
+                            <label id="privateAmountField">Amount</label><input class="w3-input w3-round" type="number" id="privateAmountValue" title="privateAmountValue"/>
+                            <label id="privateMemoField">Encrypted Memo</label><input class="w3-input w3-round" type="text" id="privateMemoValue" title="privateMemoValue"/>
                         </div>
                         <div class="w3-container w3-center w3-margin-top">
                             <button type="button" id="privateSendButton" onclick="sendPrivateTransaction()">Send</button>
@@ -58,9 +58,9 @@
                 <div class="page w3-container" id="receivePage">
                     <form class="w3-container w3-margin-top w3-medium">
                         <div class="w3-container">
-                            <label id="receivingAddressField">Receiving Address</label><input class="w3-input w3-round" type="text" id="receivingAddressValue"> </input>
-                            <label id="descriptionField">Description</label><input class="w3-input w3-round" type="text" id="descriptionValue"> </input>
-                            <label id="requestedAmountField">Requested Amount</label><input class="w3-input w3-round" type="number" id="requestedAmountValue"></input>
+                            <label id="receivingAddressField">Receiving Address</label><input class="w3-input w3-round" type="text" id="receivingAddressValue" title="receivingAddressValue"/>
+                            <label id="descriptionField">Description</label><input class="w3-input w3-round" type="text" id="descriptionValue" title="descriptionValue"/>
+                            <label id="requestedAmountField">Requested Amount</label><input class="w3-input w3-round" type="number" id="requestedAmountValue" title="requestedAmountValue"/>
                         </div>
                         <div class="w3-container w3-center w3-margin-top">
                             <button type="button" id="newTransparentAddress" onclick="getNewTransparentAddress()">New Transparent Address</button>
@@ -85,8 +85,6 @@
                     &nbsp;(Transparent: <span class="w3-small" id="transparentBalanceValue"></span> <span class="w3-small coin"></span>/ Private: <span class="w3-small" id="privateBalanceValue"></span> <span class="w3-small coin"></span>)
                     &nbsp;<span class="w3-small w3-right-align" id="connectionsField">| Connections: <span class="w3-small" id="connectionsValue"></span></span>
                     &nbsp;| <span class="w3-small" id="syncStatusLabel">Sync Status: <span class="w3-small" id="syncStatusValue"></span>%</span></span>
-                </span>
-
             </div>
         </div>
 
@@ -97,8 +95,8 @@
 
       function openPage(pageName) {
           if (document.getElementById("alertSpan").innerHTML.length < 2) {
-              var i;
-              var x = document.getElementsByClassName("page");
+              let i;
+              let x = document.getElementsByClassName("page");
               for (i = 0; i < x.length; i++) {
                   x[i].style.display = "none";
               }
@@ -108,33 +106,32 @@
           }
       }
       function setActiveNav(element) {
-          for (let i = 0; i < document.getElementsByClassName('navLink').length; i ++) {
+          for (let i = 0; i < document.getElementsByClassName('navLink').length; i++) {
               document.getElementsByClassName('navLink')[i].className = 'navLink';
           }
           element.className += ' w3-green';
       }
       /* // TODO: add emoji support
-      function stringToHex(s)
-      {
-          let hex = '';
-          let append = '';
-          for (let i = 0; i < s.length; i++) {
-              let cp = s.codePointAt(i).toString(16);
-              append = '';
-              if (cp.length / 6 !== 1) {
-                  for (let n = 0; n < (6 - cp.length); n++) {
-                      append += '0';
-                  }
-                  cp = append + cp;
-              }
-              hex += cp;
-              console.log(hex);
-          }
-          return(hex);
-      }
-      */
-      function stringToHex(s)
-      {
+       function stringToHex(s)
+       {
+       let hex = '';
+       let append = '';
+       for (let i = 0; i < s.length; i++) {
+       let cp = s.codePointAt(i).toString(16);
+       append = '';
+       if (cp.length / 6 !== 1) {
+       for (let n = 0; n < (6 - cp.length); n++) {
+       append += '0';
+       }
+       cp = append + cp;
+       }
+       hex += cp;
+       console.log(hex);
+       }
+       return(hex);
+       }
+       */
+      function stringToHex(s) {
           let hex = '';
           let append = '';
           for (let i = 0; i < s.length; i++) {
@@ -148,16 +145,18 @@
               }
               hex += cp;
           }
-          return(hex);
+          return (hex);
       }
+      /* Unused
       function hexToString(s) {
           let str = '';
-              for (let i = 0; i < s.length; i++) {
-                  let charCode = parseInt(s[(i*2)] + s[(i*2)+1], 16);
+          for (let i = 0; i < s.length; i++) {
+              let charCode = parseInt(s[(i * 2)] + s[(i * 2) + 1], 16);
               str += String.fromCharCode(charCode);
           }
           return str;
       }
+      */
       function transparentReset() {
           document.getElementById("transparentSendToValue").value = "";
           document.getElementById("transparentAmountValue").value = "";

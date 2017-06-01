@@ -1,8 +1,8 @@
 const {ipcRenderer} = require('electron');
-var tableify = require('tableify');
+let tableify = require('tableify');
 
-var memos = [], options = [], oldOptions = [], privTxs = [], shieldedOpts = [], transOpts = [], txs = [];
-var genHistory = {'transparent': false, 'private': false};
+let memos = [], options = [], oldOptions = [], privTxs = [], shieldedOpts = [], transOpts = [], txs = [];
+let genHistory = {'transparent': false, 'private': false};
 
 Array.prototype.getRandom = function () {
     return this[Math.floor(Math.random() * this.length)];
@@ -11,20 +11,20 @@ Array.prototype.getRandom = function () {
 function hexToString(s) {
     let str = '';
     for (let i = 0; i < s.length; i++) {
-        let charCode = parseInt(s[(i*2)] + s[(i*2)+1], 16);
+        let charCode = parseInt(s[(i * 2)] + s[(i * 2) + 1], 16);
         str += String.fromCharCode(charCode);
     }
     return str;
 }
 
-function generateQuery (method, params) {
+function generateQuery(method, params) {
     let jsonObject;
     jsonObject = {'jsonrpc': '1.0', 'id': method, 'method': method, 'params': params};
     ipcRenderer.send('jsonQuery-request', jsonObject);
-    return(jsonObject);
+    return (jsonObject);
 }
 
-function generateQuerySync (method, params) {
+function generateQuerySync(method, params) {
     let jsonObject;
     jsonObject = {'jsonrpc': '1.0', 'id': method, 'method': method, 'params': params};
     return ipcRenderer.sendSync('jsonQuery-request-sync', jsonObject);
@@ -35,19 +35,27 @@ function showTxDetails(txid) {
     let datetime = new Date(res.result.time * 1000);
     datetime = datetime.toLocaleTimeString() + " - " + datetime.toLocaleDateString();
     let category = (res.result.amount < 0.0) ? 'send' : 'receive';
-    let obj = { amount: res.result.amount, blockhash: res.result.blockhash, category: category, confirmations: res.result.confirmations, fee: res.result.fee, txid: res.result.txid, time: datetime };
+    let obj = {
+        amount: res.result.amount,
+        blockhash: res.result.blockhash,
+        category: category,
+        confirmations: res.result.confirmations,
+        fee: res.result.fee,
+        txid: res.result.txid,
+        time: datetime
+    };
     let alertText = `Amount: ${obj.amount}\n` +
-            `Blockhash: ${obj.blockhash}\n` +
-            `Confirmations: ${obj.confirmations}\n` +
-            `Fee: ${obj.fee}\n` +
-            `Time: ${obj.time}\n` +
-            `TXID: ${obj.txid}\n`;
+        `Blockhash: ${obj.blockhash}\n` +
+        `Confirmations: ${obj.confirmations}\n` +
+        `Fee: ${obj.fee}\n` +
+        `Time: ${obj.time}\n` +
+        `TXID: ${obj.txid}\n`;
     alert(alertText);
 }
 
-function generateMemoTable (memos) {
+function generateMemoTable(memos) {
     let localMemos = memos;
-    localMemos.sort(function(a, b){ // sort table by date
+    localMemos.sort(function (a, b) { // sort table by date
         if (b.time === a.time) {
             return b.address - a.address;
         }
@@ -70,9 +78,9 @@ function generateMemoTable (memos) {
     document.getElementById("memoPage").innerHTML = div.innerHTML;
 }
 
-function generateHistoryTable (txs, privTxs) {
+function generateHistoryTable(txs, privTxs) {
     let combinedTxs = [].concat(txs, privTxs);
-    combinedTxs.sort(function(a, b){
+    combinedTxs.sort(function (a, b) {
         if (b.time === a.time) {
             return b.address - a.address;
         }
@@ -100,7 +108,14 @@ function generateHistoryTable (txs, privTxs) {
     }
     // build empty table if no results
     if (combinedTxs.length < 1) {
-        combinedTxs[0] = {'address': 'No received transactions found', 'amount': 0, 'category': '', 'confirmations': '', 'time': '', 'details': ''};
+        combinedTxs[0] = {
+            'address': 'No received transactions found',
+            'amount': 0,
+            'category': '',
+            'confirmations': '',
+            'time': '',
+            'details': ''
+        };
     }
     let tableElement = tableify(combinedTxs);
     let div = document.createElement('div');
@@ -161,7 +176,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         let ctr = 0;
         for (let i = 0; i < arg.result.length; i++) {
             for (let n = 0; n < arg.result[i].length; n++) {
-                table[ctr] = { 'transparent address': arg.result[i][n][0], 'amount': arg.result[i][n][1] };
+                table[ctr] = {'transparent address': arg.result[i][n][0], 'amount': arg.result[i][n][1]};
                 ctr += 1;
                 let option = document.createElement("option");
                 option.text = arg.result[i][n][0] + ' (' + arg.result[i][n][1] + ')';
@@ -204,7 +219,7 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
         let ctr = 0;
         for (let i = 0; i < arg.result.length; i++) {
             let res = generateQuerySync('z_getbalance', [arg.result[i], 0]);
-            table[ctr] = { 'private address': arg.result[i], 'amount': res.result };
+            table[ctr] = {'private address': arg.result[i], 'amount': res.result};
             ctr += 1;
             if (res.result > 0) {
                 let option = document.createElement("option");
@@ -242,8 +257,15 @@ ipcRenderer.on('jsonQuery-reply', (event, arg) => {
             let res = generateQuerySync('z_listreceivedbyaddress', [arg.result[i], 0]);
             for (let n = 0; n < res.result.length; n++) {
                 let tx = generateQuerySync('gettransaction', [res.result[n].txid]);
-                privTxs.push({ address: arg.result[i], txid: tx.result.txid, amount: res.result[n].amount,
-                    memo: res.result[n].memo, category: 'receive', time: tx.result.time, confirmations: tx.result.confirmations });
+                privTxs.push({
+                    address: arg.result[i],
+                    txid: tx.result.txid,
+                    amount: res.result[n].amount,
+                    memo: res.result[n].memo,
+                    category: 'receive',
+                    time: tx.result.time,
+                    confirmations: tx.result.confirmations
+                });
             }
         }
         genHistory.private = true;
@@ -333,11 +355,11 @@ function refreshUI() {
     options = [].concat(transOpts, shieldedOpts);
 
     // update the private send dropdown only if needed
-    var different = false;
+    let different = false;
     if (options.length !== oldOptions.length) {
         different = true;
     }
-    else if (options.length == oldOptions.length) {
+    else if (options.length === oldOptions.length) {
         for (let i = 0; i < options.length; i++) {
             if (options[i].value !== oldOptions[i].value) {
                 different = true;
@@ -373,16 +395,16 @@ setInterval(refreshUI, 900);
 setInterval(pollUI, 400);
 
 module.exports = {
-    generateQuerySync: function(method, params) {
+    generateQuerySync: function (method, params) {
         return generateQuerySync(method, params);
     },
-    generateQuery: function(method, params) {
+    generateQuery: function (method, params) {
         return generateQuery(method, params);
     },
-    showTxDetails: function(txid) {
+    showTxDetails: function (txid) {
         return showTxDetails(txid);
     },
-    saveOpts: function(opts) {
+    saveOpts: function (opts) {
         ipcRenderer.send('save-opts', opts);
     }
 };
