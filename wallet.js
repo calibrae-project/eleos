@@ -76,8 +76,8 @@ rl.on('close', () => {
     }
 
     // authentication for terminal
-    let HtAuth = require('ht-auth'),
-        htAuth = HtAuth.create({file: (app.getPath('userData') + '/eleos.htpasswd')});
+    let HtAuth = require('ht-auth');
+    let htAuth = HtAuth.create({file: (app.getPath('userData') + '/eleos.htpasswd')});
     htAuth.add({username: rpcUser, password: rpcPassword, force: true}, function (err) {
         // initialize xtermjs
         const term = require('./xterm.js');
