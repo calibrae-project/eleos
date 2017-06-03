@@ -77,10 +77,10 @@ function getUserDataDir() {
 
 function clearConfig(callback) {
     data = {
-        "coin": "zcl",
+        "coin": "zen",
         "rpcUser": "",
         "rpcPass": "",
-        "rpcIP": "127.0.0.1",
+        "rpcIP": "",
         "rpcPort": "",
         "binaryPathWin": "",
         "binaryPathMacOS": "",
@@ -484,9 +484,10 @@ function createWindow() {
 
                                 dialog.showMessageBox(null, {
                                     type: 'info',
-                                    title: 'Restoration complete.',
-                                    message: 'You can switch to ZEN now.'
+                                    title: 'Restoration completed.',
+                                    message: 'You can switch to ZEN now. Press ok to restart wallet.'
                                 });
+                                app.quit();
                             });
                         }
                     }

@@ -74,3 +74,4 @@ typings/
 # Clion IDE
 cmake-build-debug/
 CMakeLists.txt
+libs/
