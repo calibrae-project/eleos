@@ -336,7 +336,7 @@ function createWindow() {
             label: 'File',
             submenu: [
                 {
-                    label: 'Import All Wallets',
+                    label: 'Import All Wallets (from .tar file)',
                     click() {
                         dialog.showOpenDialog(getFileLocationOpts('Import eleos-wallets.tar'), function (path) {
                             if (!path || !path[0]) return;
@@ -396,7 +396,7 @@ function createWindow() {
                     }
                 },
                 {
-                    label: 'Backup All Wallets',
+                    label: 'Backup All Wallets (to .tar file)',
                     click() {
                         dialog.showSaveDialog(getSaveLocationOpts('Save Eleos wallets', 'eleos-wallets.tar'), function (path) {
                                 if (!path || !path[0]) return;
@@ -457,7 +457,7 @@ function createWindow() {
                 },
                 {type: "separator"},
                 {
-                    label: 'Restore ZEN from ZCL wallet',
+                    label: 'Restore ZEN from ZCL wallet.dat',
                     click() {
                         let result = dialog.showMessageBox({
                             type: 'info',
@@ -666,7 +666,9 @@ app.on('before-quit', function () {
 
 app.on('login', (event, webContents, request, authInfo, callback) => {
     event.preventDefault();
-    if (request.url === 'http://127.0.0.1:3000/console.html') callback(wallet.getCredentials().rpcUser, wallet.getCredentials().rpcPassword);
+    if (request.url === 'http://127.0.0.1:3000/console.html'){
+        callback(wallet.getCredentials().rpcUser, wallet.getCredentials().rpcPassword);
+    }
 });
 
 ipcMain.on('check-config', function () {
