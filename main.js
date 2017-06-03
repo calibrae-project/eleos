@@ -572,6 +572,22 @@ function createWindow() {
                     click() {
                         clearConfig()
                     }
+                },
+                {
+                    label: 'separator',
+                    type: 'separator'
+                },
+                {
+                    label: 'Show version',
+                    click() {
+                        let pjs = require('./package.json');
+                        console.log('Version: ' + pjs.version);
+                        dialog.showMessageBox(null, {
+                            type: 'info',
+                            title: 'Eleos version',
+                            message: 'Version: ' + pjs.version
+                        });
+                    }
                 }
             ]
         }
