@@ -476,11 +476,9 @@ function createWindow() {
                                 if (os.platform() === 'linux') zenPath = app.getPath('home') + '/' + './zen/wallet.dat';
                                 if (fs.existsSync(zenPath)) {
                                     let newPath = zenPath + '.bak-' + new Date().getTime();
-                                    ws = fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
+                                    fs.createReadStream(zenPath).pipe(fs.createWriteStream(newPath));
                                 }
-                                ws.on('finish', function(){
-                                    fs.createReadStream(path[0]).pipe(fs.createWriteStream(zenPath));
-                                });
+                                fs.createReadStream(path[0]).pipe(fs.createWriteStream(zenPath));
 
                                 dialog.showMessageBox(null, {
                                     type: 'info',
