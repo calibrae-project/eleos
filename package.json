@@ -14,7 +14,7 @@
     "zcash",
     "wallet"
   ],
-  "author": "@joshuayabut",
+  "author": "Zen Team",
   "license": "CPAL-1.0",
   "dependencies": {
     "express": "*",

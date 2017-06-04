@@ -4,7 +4,6 @@ let app = express();
 let expressWs = require('express-ws')(app);
 let os = require('os');
 let pty = require('node-pty');
-
 let auth = require('http-auth');
 let basic = auth.basic({
     realm: "eleos",
@@ -41,15 +40,17 @@ app.get('/fetch.min.js', function (req, res) {
 });
 
 app.post('/terminals', function (req, res) {
-    let cols = parseInt(req.query.cols),
-        rows = parseInt(req.query.rows),
-        term = pty.spawn(process.platform === 'win32' ? 'cmd.exe' : 'bash', (process.platform === 'win32' ? ['/k', 'cd ' + __dirname] : ['-c', 'cd ' + __dirname + ' && bash']), {
-            name: 'xterm-color',
-            cols: cols || 80,
-            rows: rows || 24,
-            cwd: process.env.PWD,
-            env: process.env
-        });
+    let cols = parseInt(req.query.cols);
+    let rows = parseInt(req.query.rows);
+    let shell = process.platform === 'win32' ? 'cmd.exe' : 'bash';
+    let command = process.platform === 'win32' ? ['/k', 'cd ' + __dirname] : ['-c', 'cd ' + __dirname + ' && bash'];
+    let term = pty.spawn(shell, command, {
+        name: 'xterm-color',
+        cols: cols || 80,
+        rows: rows || 24,
+        cwd: process.env.PWD,
+        env: process.env
+    });
 
     console.log('Created terminal with PID: ' + term.pid);
     terminals[term.pid] = term;
