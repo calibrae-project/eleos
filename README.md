@@ -4,7 +4,7 @@ Eleos is a multi-platform wallet for zero-knowledge cryptocurrencies written in 
 
   - Compatible with Windows, MacOS, and Linux
   - No third-party Java dependencies required
-  - Supports both Zclassic and Zcash
+  - Supports Zencash, Zclassic, and Zcash
 
 ![Screenshot](https://i.imgur.com/zHn4Hx8.png)
 
