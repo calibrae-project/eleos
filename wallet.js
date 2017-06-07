@@ -14,18 +14,18 @@ let config = require("./main.js").getConfig();
 // set default coin config location
 let coinConf;
 
-function existsSync(filename) {
-    try {
-        fs.accessSync(filename);
-        return true;
-    } catch(ex) {
-        return false;
-    }
-}
+// function existsSync(filename) {
+//     try {
+//         fs.accessSync(filename);
+//         return true;
+//     } catch(ex) {
+//         return false;
+//     }
+// }
 
-if ((config.confPathWin.length > 0 && existsSync(config.confPathWin)) ||
-        (config.confPathMacOS.length > 0 && existsSync(config.confPathWin)) ||
-        (config.confPathLinux.length > 0 && existsSync(config.confPathWin))) {
+if ((config.confPathWin.length > 0 && fs.existsSync(config.confPathWin)) ||
+        (config.confPathMacOS.length > 0 && fs.existsSync(config.confPathWin)) ||
+        (config.confPathLinux.length > 0 && fs.existsSync(config.confPathWin))) {
     if (os.platform() === "win32") {
         coinConf = config.confPathWin;
     }
@@ -62,7 +62,7 @@ let rpcUser;
 let rpcPassword;
 let rpcIP;
 let rpcPort;
-if (!existsSync(coinConf)) {
+if (!fs.existsSync(coinConf)) {
     console.log("Invalid path " + coinConf + " for wallet config file. Check config.json for accuracy.");
     //return;
 } else {

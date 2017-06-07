@@ -44,15 +44,11 @@ app.get("/fetch.min.js", function (req, res) {
 });
 
 app.post("/terminals", function (req, res) {
-
+    const pty = require("node-pty");
     let cols = parseInt(req.query.cols);
     let rows = parseInt(req.query.rows);
-    console.log("1");
     let shell = process.platform === "win32" ? "cmd.exe" : "bash";
-    console.log("2");
     let command = process.platform === "win32" ? ["/k", "cd " + __dirname] : ["-c", "cd " + __dirname + " && bash"];
-    console.log("3");
-    var pty = require("node-pty");
     let term = pty.spawn(shell, command, {
         name: "xterm-color",
         cols: cols || 80,
@@ -60,14 +56,6 @@ app.post("/terminals", function (req, res) {
         cwd: process.env.HOME,
         env: process.env
     });
-    console.log("4");
-    // let term = require('child_process').spawn, command = "cmd.exe", cmd = spawn('cmd', ['/s', '/c', command], {
-    //     name: "xterm-color",
-    //     cols: cols || 80,
-    //     rows: rows || 24,
-    //     cwd: process.env.HOME,
-    //     env: process.env
-    // });
 
     console.log("Created terminal with PID: " + term.pid);
     terminals[term.pid] = term;

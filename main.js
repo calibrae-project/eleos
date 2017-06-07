@@ -18,6 +18,7 @@ const crypto = require("crypto");
 const request = require("request");
 const progress = require("request-progress");
 
+let initWalletCount = 0;
 let config;
 let wallet;
 let mainWindow;
@@ -36,7 +37,7 @@ let data;
 function getFileHash(path, callback) {
     const hash = crypto.createHash("sha256");
     let input;
-    if (fs.accessSync(path)) {
+    if (fs.existsSync(path)) {
         input = fs.createReadStream(path);
     }
     else {
@@ -58,28 +59,28 @@ function fileDownload(url, path, callback) {
         return;
     }
 
-    progress(request(url),{
+    progress(request(url), {
         // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
         // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
         // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
     })
-    .on("progress", function (state) {
-        paramsPending = true;
-        downloadProgress.name = url;
-        downloadProgress.percent = state.percent;
-        downloadProgress.timeRemaining = state.time.remaining;
-    })
-    .on("error", function (err) {
-        dialog.showErrorBox("Error downloading file", "There was an error trying to download " + downloadProgress.name);
-        console.log(err);
-    })
-    .on("end", function () {
-        paramsPending = false;
-        if (typeof callback === "function") {
-            callback();
-        }
-    })
-    .pipe(fs.createWriteStream(path));
+        .on("progress", function (state) {
+            paramsPending = true;
+            downloadProgress.name = url;
+            downloadProgress.percent = state.percent;
+            downloadProgress.timeRemaining = state.time.remaining;
+        })
+        .on("error", function (err) {
+            dialog.showErrorBox("Error downloading file", "There was an error trying to download " + downloadProgress.name);
+            console.log(err);
+        })
+        .on("end", function () {
+            paramsPending = false;
+            if (typeof callback === "function") {
+                callback();
+            }
+        })
+        .pipe(fs.createWriteStream(path));
 }
 
 function writeConfig(data) {
@@ -284,7 +285,11 @@ function startWallet() {
         app.quit();
     }
     else {
-        console.log("starting wallet");
+        if(initWalletCount === 10){
+            dialog.showErrorBox("Wallet daemon can not be run.", "Wallet daemon is not working on your system.");
+            app.quit();
+        }
+        initWalletCount++;
         if (!zcashd && (keyVerification.verifying === true && keyVerification.proving === true && configComplete === true)) {
             try {
                 zcashd = spawn(cmd);
@@ -728,7 +733,6 @@ function createWindow() {
     });
 }
 
-
 app.on("ready", function () {
     checkConfig(createWindow);
 });
@@ -767,7 +771,9 @@ ipcMain.on("check-config", function () {
 });
 
 ipcMain.on("check-params", (event) => {
-    if ((keyVerification.verifying === false || keyVerification.proving === false)){ checkParams();}
+    if ((keyVerification.verifying === false || keyVerification.proving === false)) {
+        checkParams();
+    }
     if (keyVerification.verifyingDownloading === true || keyVerification.provingDownloading === true) {
         event.sender.send("params-pending", downloadProgress);
     } else {
