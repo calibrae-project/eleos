@@ -1,13 +1,17 @@
-let express = require('express');
-let getUserDataDir = require('./main.js').getUserDataDir();
-let app = express();
-let expressWs = require('express-ws')(app);
-let os = require('os');
-let pty = require('node-pty');
-let auth = require('http-auth');
+// @flow
+/*jshint esversion: 6 */
+/*jslint node: true */
+"use strict";
+
+const express = require("express");
+const getUserDataDir = require("./main.js").getUserDataDir();
+const app = express();
+const expressWs = require("express-ws")(app);
+const os = require("os");
+const auth = require("http-auth");
 let basic = auth.basic({
     realm: "eleos",
-    file: (getUserDataDir + '/eleos.htpasswd')
+    file: (getUserDataDir + "/eleos.htpasswd")
 });
 
 let terminals = {},
@@ -15,82 +19,95 @@ let terminals = {},
 
 app.use(auth.connect(basic));
 
-app.use('/resources/', express.static(__dirname + '/resources'));
+app.use("/resources/", express.static(__dirname + "/resources"));
 
-app.use('/xterm/', express.static(__dirname + '/node_modules/xterm/dist'));
+app.use("/xterm/", express.static(__dirname + "/node_modules/xterm/dist"));
 
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/console.html');
+app.get("/", function (req, res) {
+    res.sendFile(__dirname + "/console.html");
 });
 
-app.get('/console.html', function (req, res) {
-    res.sendFile(__dirname + '/console.html');
+app.get("/console.html", function (req, res) {
+    res.sendFile(__dirname + "/console.html");
 });
 
-app.get('/style.css', function (req, res) {
-    res.sendFile(__dirname + '/resources/xtermjs.css');
+app.get("/style.css", function (req, res) {
+    res.sendFile(__dirname + "/resources/xtermjs.css");
 });
 
-app.get('/main.js', function (req, res) {
-    res.sendFile(__dirname + '/resources/xtermjs.js');
+app.get("/main.js", function (req, res) {
+    res.sendFile(__dirname + "/resources/xtermjs.js");
 });
 
-app.get('/fetch.min.js', function (req, res) {
-    res.sendFile(__dirname + '/resources/fetch.min.js');
+app.get("/fetch.min.js", function (req, res) {
+    res.sendFile(__dirname + "/resources/fetch.min.js");
 });
 
-app.post('/terminals', function (req, res) {
+app.post("/terminals", function (req, res) {
+
     let cols = parseInt(req.query.cols);
     let rows = parseInt(req.query.rows);
-    let shell = process.platform === 'win32' ? 'cmd.exe' : 'bash';
-    let command = process.platform === 'win32' ? ['/k', 'cd ' + __dirname] : ['-c', 'cd ' + __dirname + ' && bash'];
+    console.log("1");
+    let shell = process.platform === "win32" ? "cmd.exe" : "bash";
+    console.log("2");
+    let command = process.platform === "win32" ? ["/k", "cd " + __dirname] : ["-c", "cd " + __dirname + " && bash"];
+    console.log("3");
+    var pty = require("node-pty");
     let term = pty.spawn(shell, command, {
-        name: 'xterm-color',
+        name: "xterm-color",
         cols: cols || 80,
         rows: rows || 24,
-        cwd: process.env.PWD,
+        cwd: process.env.HOME,
         env: process.env
     });
+    console.log("4");
+    // let term = require('child_process').spawn, command = "cmd.exe", cmd = spawn('cmd', ['/s', '/c', command], {
+    //     name: "xterm-color",
+    //     cols: cols || 80,
+    //     rows: rows || 24,
+    //     cwd: process.env.HOME,
+    //     env: process.env
+    // });
 
-    console.log('Created terminal with PID: ' + term.pid);
+    console.log("Created terminal with PID: " + term.pid);
     terminals[term.pid] = term;
-    logs[term.pid] = '';
-    term.on('data', function (data) {
+    logs[term.pid] = "";
+    term.on("data", function (data) {
         logs[term.pid] += data;
     });
     res.send(term.pid.toString());
     res.end();
 });
 
-app.post('/terminals/:pid/size', function (req, res) {
+app.post("/terminals/:pid/size", function (req, res) {
     let pid = parseInt(req.params.pid);
     let cols = parseInt(req.query.cols);
     let rows = parseInt(req.query.rows);
     let term = terminals[pid];
 
     term.resize(cols, rows);
-    console.log('Resized terminal ' + pid + ' to ' + cols + ' cols and ' + rows + ' rows.');
+    console.log("Resized terminal " + pid + " to " + cols + " cols and " + rows + " rows.");
     res.end();
 });
 
-app.ws('/terminals/:pid', function (ws, req) {
+app.ws("/terminals/:pid", function (ws, req) {
     let term = terminals[parseInt(req.params.pid)];
-    console.log('Connected to terminal ' + term.pid);
+    console.log("Connected to terminal " + term.pid);
     ws.send(logs[term.pid]);
 
-    term.on('data', function (data) {
+    term.on("data", function (data) {
         try {
             ws.send(data);
         } catch (ex) {
             // The WebSocket is not open, ignore
         }
     });
-    ws.on('message', function (msg) {
+    ws.on("message", function (msg) {
         term.write(msg);
     });
-    ws.on('close', function () {
+    ws.on("close", function () {
         term.kill();
-        console.log('Closed terminal ' + term.pid);
+        console.log("Closed terminal " + term.pid);
         // Clean things up
         delete terminals[term.pid];
         delete logs[term.pid];
@@ -98,6 +115,6 @@ app.ws('/terminals/:pid', function (ws, req) {
 });
 
 let port = process.env.PORT || 3000;
-let host = os.platform() === 'win32' ? '127.0.0.1' : '0.0.0.0';
+let host = os.platform() === "win32" ? "127.0.0.1" : "0.0.0.0";
 
 app.listen(port, host);
