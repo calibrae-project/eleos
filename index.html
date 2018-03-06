@@ -1,200 +1,253 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <title>Eleos - Equihash Wallet and Messaging</title>
-      <link rel="stylesheet" href="resources/w3.css">
-      <link rel="stylesheet" href="resources/styles.css">
-  </head>
-  <body>
-        <div class="containerDiv w3-light-gray">
-            <div class="tabsBar">
-                <ul class="w3-navbar w3-light-gray">
-                    <!--<li><a class="navLink" id="networkTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('networkPage')">Network</a></li>-->
-                    <li><a class="navLink" id="historyTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('historyPage')">History</a></li>
-                    <li><a class="navLink" id="memoTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('memoPage')">Memos</a></li>
-                    <li><a class="navLink" id="sendTTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('sendTransparentPage')">Send Transparent</a></li>
-                    <li><a class="navLink" id="sendPTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('sendPrivatePage')">Send Private</a></li>
-                    <li><a class="navLink" id="receiveTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('receivePage')">Receive</a></li>
-                    <li><a class="navLink" id="addressesTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('addressesPage')">Addresses</a></li>
-                    <li><a class="navLink" id="consoleTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('consolePage')">Console</a></li>
-                </ul>
+    <link rel="stylesheet" href="resources/w3.css">
+    <link rel="stylesheet" href="resources/styles.css">
+</head>
+
+<body>
+    <div class="containerDiv w3-black">
+        <div class="tabsBar">
+            <ul class="w3-navbar w3-black">
+                <!--<li><a class="navLink" id="networkTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('networkPage')">Network</a></li>-->
+                <li>
+                    <a class="navLink" id="historyTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('historyPage')">History</a>
+                </li>
+                <li>
+                    <a class="navLink" id="memoTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('memoPage')">Memos</a>
+                </li>
+                <li>
+                    <a class="navLink" id="sendTTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('sendTransparentPage')">Send Transparent</a>
+                </li>
+                <li>
+                    <a class="navLink" id="sendPTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('sendPrivatePage')">Send Private</a>
+                </li>
+                <li>
+                    <a class="navLink" id="receiveTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('receivePage')">Receive</a>
+                </li>
+                <li>
+                    <a class="navLink" id="addressesTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('addressesPage')">Addresses</a>
+                </li>
+                <li>
+                    <a class="navLink" id="consoleTab" href="javascript:void(0)" onclick="setActiveNav(this); openPage('consolePage')">Console</a>
+                </li>
+            </ul>
+        </div>
+        <div class="bodyDiv" id="bodyDiv">
+            <span class="alertSpan" id="alertSpan"></span>
+            <div class="page" id="networkPage"></div>
+            <div class="page" id="historyPage">
+                <span id="transactionTransparentSpan"></span>
+                <span id="transactionPrivateSpan"></span>
             </div>
-            <div class="bodyDiv" id="bodyDiv">
-                <span class="alertSpan" id="alertSpan"></span>
-                <div class="page" id="networkPage"></div>
-                <div class="page" id="historyPage">
-                    <span id="transactionTransparentSpan"></span>
-                    <span id="transactionPrivateSpan"></span>
-                </div>
-                <div class="page" id="memoPage"></div>
-                <div class="page w3-container" id="sendTransparentPage">
-                    <form class="w3-container w3-margin-top w3-medium">
-                        <div class="w3-container">
-                            <label id="transparentAvailableField">Available Transparent Balance: </label><span class="" id="transparentAvailableValue"> </span> <span class="w3-small coin"></span><br /><br />
-                            <label id="transparentSendToField">Send To</label><input class="w3-input w3-round" type="text" id="transparentSendToValue" title="transparentSendToValue"/>
-                            <label id="transparentAmountField">Amount</label><input class="w3-input w3-round" type="number" id="transparentAmountValue" title="transparentAmountValue"/>
-                        </div>
-                        <div class="w3-container w3-center w3-margin-top">
-                            <button type="button" id="transparentSendButton" onclick="sendTransparentTransaction()">Send</button>
-                            <button type="button" id="transparentResetButton" onclick="transparentReset()">Reset</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="page w3-container" id="sendPrivatePage">
-                    <form class="w3-container w3-margin-top w3-medium">
-                        <div class="w3-container">
-                            <label id="privateFromField">From</label><select class="w3-select w3-round w3-small" id="privateFromSelect" title="privateFromSelect"></select>
-                            <label id="privateSendToField">Send To</label><input class="w3-input w3-round" type="text" id="privateSendToValue" title="privateSendToValue"/>
-                            <label id="privateAmountField">Amount</label><input class="w3-input w3-round" type="number" id="privateAmountValue" title="privateAmountValue"/>
-                            <label id="privateMemoField">Encrypted Memo</label><input class="w3-input w3-round" type="text" id="privateMemoValue" title="privateMemoValue"/>
-                        </div>
-                        <div class="w3-container w3-center w3-margin-top">
-                            <button type="button" id="privateSendButton" onclick="sendPrivateTransaction()">Send</button>
-                            <button type="button" id="privateResetButton" onclick="privateReset()">Reset</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="page w3-container" id="receivePage">
-                    <form class="w3-container w3-margin-top w3-medium">
-                        <div class="w3-container">
-                            <label id="receivingAddressField">Receiving Address</label><input class="w3-input w3-round" type="text" id="receivingAddressValue" title="receivingAddressValue"/>
-                            <label id="descriptionField">Description</label><input class="w3-input w3-round" type="text" id="descriptionValue" title="descriptionValue"/>
-                            <label id="requestedAmountField">Requested Amount</label><input class="w3-input w3-round" type="number" id="requestedAmountValue" title="requestedAmountValue"/>
-                        </div>
-                        <div class="w3-container w3-center w3-margin-top">
-                            <button type="button" id="newTransparentAddress" onclick="getNewTransparentAddress()">New Transparent Address</button>
-                            <button type="button" id="existingPrivateAddress" onclick="getNewPrivateAddress()">Re-use Private Address</button>
-                            <button type="button" id="newPrivateAddress" onclick="getNewPrivateAddress()">New Private Address</button>
-                        </div>
-                        <div class="w3-container w3-center w3-margin-top">
-                            <!--<button type="button" id="generateQR" onclick="">Generate QR Code</button>-->
-                        </div>
-                    </form>
-                </div>
-                <div class="page" id="addressesPage">
-                    <span id="addressTransparentSpan"></span>
-                    <span id="addressPrivateSpan"></span>
-                </div>
-                <div class="page" id="consolePage" style="height: 100%; width: 100%;">
-                    <object type="text/html" data="http://127.0.0.1:3000/console.html" style="height: 100%; width: 100%;"></object>
-                </div>
+            <div class="page" id="memoPage"></div>
+            <div class="page w3-container" id="sendTransparentPage">
+                <form class="w3-container w3-margin-top w3-medium">
+                    <div class="w3-container">
+                        <label id="transparentAvailableField">Available Transparent Balance: </label>
+                        <span class="" id="transparentAvailableValue"> </span>
+                        <span class="w3-medium coin"></span>
+                        <br />
+                        <br />
+                        <label id="transparentSendToField">Send To</label>
+                        <input class="w3-input w3-round" type="text" id="transparentSendToValue" title="transparentSendToValue" />
+                        <label id="transparentAmountField">Amount</label>
+                        <input class="w3-input w3-round" type="number" id="transparentAmountValue" title="transparentAmountValue" />
+                    </div>
+                    <div class="w3-container w3-center w3-margin-top">
+                        <button type="button" id="transparentSendButton" onclick="sendTransparentTransaction()">Send</button>
+                        <button type="button" id="transparentResetButton" onclick="transparentReset()">Reset</button>
+                    </div>
+                </form>
             </div>
-            <div class="statusBar">
-                <span class="w3-small" id="statusBar">Current Balance: <span class="w3-small" id="currentBalanceValue"></span> <span class="w3-small coin"></span>
-                    &nbsp;(Transparent: <span class="w3-small" id="transparentBalanceValue"></span> <span class="w3-small coin"></span>/ Private: <span class="w3-small" id="privateBalanceValue"></span> <span class="w3-small coin"></span>)
-                    &nbsp;<span class="w3-small w3-right-align" id="connectionsField">| Connections: <span class="w3-small" id="connectionsValue"></span></span>
-                    &nbsp;| <span class="w3-small" id="syncStatusLabel">Sync Status: <span class="w3-small" id="syncStatusValue"></span>%</span></span>
+            <div class="page w3-container" id="sendPrivatePage">
+                <form class="w3-container w3-margin-top w3-medium">
+                    <div class="w3-container">
+                        <label id="privateFromField">From</label>
+                        <select class="w3-select w3-round w3-medium" id="privateFromSelect" title="privateFromSelect"></select>
+                        <label id="privateSendToField">Send To</label>
+                        <input class="w3-input w3-round" type="text" id="privateSendToValue" title="privateSendToValue" />
+                        <label id="privateAmountField">Amount</label>
+                        <input class="w3-input w3-round" type="number" id="privateAmountValue" title="privateAmountValue" />
+                        <label id="privateMemoField">Encrypted Memo</label>
+                        <input class="w3-input w3-round" type="text" id="privateMemoValue" title="privateMemoValue" />
+                    </div>
+                    <div class="w3-container w3-center w3-margin-top">
+                        <button type="button" id="privateSendButton" onclick="sendPrivateTransaction()">Send</button>
+                        <button type="button" id="privateResetButton" onclick="privateReset()">Reset</button>
+                    </div>
+                </form>
+            </div>
+            <div class="page w3-container" id="receivePage">
+                <form class="w3-container w3-margin-top w3-medium">
+                    <div class="w3-container">
+                        <label id="receivingAddressField">Receiving Address</label>
+                        <input class="w3-input w3-round" type="text" id="receivingAddressValue" title="receivingAddressValue" />
+                        <label id="descriptionField">Description</label>
+                        <input class="w3-input w3-round" type="text" id="descriptionValue" title="descriptionValue" />
+                        <label id="requestedAmountField">Requested Amount</label>
+                        <input class="w3-input w3-round" type="number" id="requestedAmountValue" title="requestedAmountValue" />
+                    </div>
+                    <div class="w3-container w3-center w3-margin-top">
+                        <button type="button" id="newTransparentAddress" onclick="getNewTransparentAddress()">New Transparent Address</button>
+                        <button type="button" id="existingPrivateAddress" onclick="getNewPrivateAddress()">Re-use Private Address</button>
+                        <button type="button" id="newPrivateAddress" onclick="getNewPrivateAddress()">New Private Address</button>
+                    </div>
+                    <div class="w3-container w3-center w3-margin-top">
+                        <!--<button type="button" id="generateQR" onclick="">Generate QR Code</button>-->
+                    </div>
+                </form>
+            </div>
+            <div class="page" id="addressesPage">
+                <span id="addressTransparentSpan"></span>
+                <span id="addressPrivateSpan"></span>
+            </div>
+            <div class="page" id="consolePage" style="height: 100%; width: 100%;">
+                <object type="text/html" data="http://127.0.0.1:3001/console.html" style="height: 100%; width: 100%;"></object>
             </div>
         </div>
+        <div class="statusBar">
+            <span class="w3-medium" id="statusBar">Current Balance:
+                <span class="w3-medium" id="currentBalanceValue"></span>
+                <span class="w3-medium coin"></span>
+                &nbsp;(Transparent:
+                <span class="w3-medium" id="transparentBalanceValue"></span>
+                <span class="w3-medium coin"></span>/ Private:
+                <span class="w3-medium" id="privateBalanceValue"></span>
+                <span class="w3-medium coin"></span>) &nbsp;
+                <span class="w3-medium w3-right-align" id="connectionsField">| Connections:
+                    <span class="w3-medium" id="connectionsValue"></span>
+                </span>
+                &nbsp;|
+                <span class="w3-medium" id="syncStatusLabel">Sync Status:
+                    <span class="w3-medium" id="syncStatusValue"></span>%</span>
+            </span>
+        </div>
+    </div>
 
-  </body>
+</body>
 
-  <script>
-      const renderer = require('./renderer.js');
+<script>
+    const renderer = require('./renderer.js');
 
-      function openPage(pageName) {
-          if (document.getElementById("alertSpan").innerHTML.length < 2) {
-              let i;
-              let x = document.getElementsByClassName("page");
-              for (i = 0; i < x.length; i++) {
-                  x[i].style.display = "none";
-              }
-              document.getElementById(pageName).style.display = "block";
-          } else {
-              setActiveNav(document.getElementById("historyTab"));
-          }
-      }
-      function setActiveNav(element) {
-          for (let i = 0; i < document.getElementsByClassName('navLink').length; i++) {
-              document.getElementsByClassName('navLink')[i].className = 'navLink';
-          }
-          element.className += ' w3-green';
-      }
-      /* // TODO: add emoji support
-       function stringToHex(s)
-       {
-       let hex = '';
-       let append = '';
-       for (let i = 0; i < s.length; i++) {
-       let cp = s.codePointAt(i).toString(16);
-       append = '';
-       if (cp.length / 6 !== 1) {
-       for (let n = 0; n < (6 - cp.length); n++) {
-       append += '0';
-       }
-       cp = append + cp;
-       }
-       hex += cp;
-       console.log(hex);
-       }
-       return(hex);
-       }
-       */
-      function stringToHex(s) {
-          let hex = '';
-          let append = '';
-          for (let i = 0; i < s.length; i++) {
-              let cp = s.codePointAt(i).toString(16);
-              append = '';
-              if (cp.length / 2 !== 1) {
-                  for (let n = 0; n < (2 - cp.length); n++) {
-                      append += '0';
-                  }
-                  cp = append + cp;
-              }
-              hex += cp;
-          }
-          return (hex);
-      }
-      /* Unused
-      function hexToString(s) {
-          let str = '';
-          for (let i = 0; i < s.length; i++) {
-              let charCode = parseInt(s[(i * 2)] + s[(i * 2) + 1], 16);
-              str += String.fromCharCode(charCode);
-          }
-          return str;
-      }
-      */
-      function transparentReset() {
-          document.getElementById("transparentSendToValue").value = "";
-          document.getElementById("transparentAmountValue").value = "";
-      }
-      function privateReset() {
-          document.getElementById("privateSendToValue").value = "";
-          document.getElementById("privateAmountValue").value = "";
-          document.getElementById("privateMemoValue").value = "";
-      }
-      function getNewTransparentAddress() {
-          document.getElementById("receivingAddressValue").value = renderer.generateQuerySync('getnewaddress', []).result;
-      }
-      function getNewPrivateAddress() {
-          document.getElementById("receivingAddressValue").value = renderer.generateQuerySync('z_getnewaddress', []).result;
-      }
-      function sendTransparentTransaction() {
-          let sendTo = document.getElementById("transparentSendToValue").value;
-          let amount = document.getElementById("transparentAmountValue").value;
-          let tx = {};
-          tx[sendTo] = Number(amount);
-          renderer.generateQuery('sendmany', ["", tx]);
-          document.getElementById("transparentResetButton").click();
-      }
-      function sendPrivateTransaction() {
-          let from = document.getElementById("privateFromSelect").value;
-          let address = document.getElementById("privateSendToValue").value;
-          let amount = Number(document.getElementById("privateAmountValue").value);
-          if (document.getElementById("privateMemoValue").value.length === 0) {
-              renderer.generateQuery('z_sendmany', [from, [{'address': address, 'amount': amount}]]);
-          }
-          else {
-              let memo = stringToHex(document.getElementById("privateMemoValue").value);
-              renderer.generateQuery('z_sendmany', [from, [{'address': address, 'amount': amount, 'memo': memo}]]);
-          }
-          document.getElementById("privateResetButton").click();
-      }
+    function openPage(pageName) {
+        if (document.getElementById("alertSpan").innerHTML.length < 2) {
+            let i;
+            let x = document.getElementsByClassName("page");
+            for (i = 0; i < x.length; i++) {
+                x[i].style.display = "none";
+            }
+            document.getElementById(pageName).style.display = "block";
+        } else {
+            setActiveNav(document.getElementById("historyTab"));
+        }
+    }
 
-      // set default tab
-      document.getElementById("historyTab").click();
-  </script>
+    function setActiveNav(element) {
+        for (let i = 0; i < document.getElementsByClassName('navLink').length; i++) {
+            document.getElementsByClassName('navLink')[i].className = 'navLink';
+        }
+        element.className += ' w3-green';
+    }
+    /* // TODO: add emoji support
+     function stringToHex(s)
+     {
+     let hex = '';
+     let append = '';
+     for (let i = 0; i < s.length; i++) {
+     let cp = s.codePointAt(i).toString(16);
+     append = '';
+     if (cp.length / 6 !== 1) {
+     for (let n = 0; n < (6 - cp.length); n++) {
+     append += '0';
+     }
+     cp = append + cp;
+     }
+     hex += cp;
+     console.log(hex);
+     }
+     return(hex);
+     }
+     */
+    function stringToHex(s) {
+        let hex = '';
+        let append = '';
+        for (let i = 0; i < s.length; i++) {
+            let cp = s.codePointAt(i).toString(16);
+            append = '';
+            if (cp.length / 2 !== 1) {
+                for (let n = 0; n < (2 - cp.length); n++) {
+                    append += '0';
+                }
+                cp = append + cp;
+            }
+            hex += cp;
+        }
+        return (hex);
+    }
+    /* Unused
+    function hexToString(s) {
+        let str = '';
+        for (let i = 0; i < s.length; i++) {
+            let charCode = parseInt(s[(i * 2)] + s[(i * 2) + 1], 16);
+            str += String.fromCharCode(charCode);
+        }
+        return str;
+    }
+    */
+    function transparentReset() {
+        document.getElementById("transparentSendToValue").value = "";
+        document.getElementById("transparentAmountValue").value = "";
+    }
+
+    function privateReset() {
+        document.getElementById("privateSendToValue").value = "";
+        document.getElementById("privateAmountValue").value = "";
+        document.getElementById("privateMemoValue").value = "";
+    }
+
+    function getNewTransparentAddress() {
+        document.getElementById("receivingAddressValue").value = renderer.generateQuerySync('getnewaddress', []).result;
+    }
+
+    function getNewPrivateAddress() {
+        document.getElementById("receivingAddressValue").value = renderer.generateQuerySync('z_getnewaddress', []).result;
+    }
+
+    function sendTransparentTransaction() {
+        let sendTo = document.getElementById("transparentSendToValue").value;
+        let amount = document.getElementById("transparentAmountValue").value;
+        let tx = {};
+        tx[sendTo] = Number(amount);
+        renderer.generateQuery('sendmany', ["", tx]);
+        document.getElementById("transparentResetButton").click();
+    }
+
+    function sendPrivateTransaction() {
+        let from = document.getElementById("privateFromSelect").value;
+        let address = document.getElementById("privateSendToValue").value;
+        let amount = Number(document.getElementById("privateAmountValue").value);
+        if (document.getElementById("privateMemoValue").value.length === 0) {
+            renderer.generateQuery('z_sendmany', [from, [{
+                'address': address,
+                'amount': amount
+            }]]);
+        } else {
+            let memo = stringToHex(document.getElementById("privateMemoValue").value);
+            renderer.generateQuery('z_sendmany', [from, [{
+                'address': address,
+                'amount': amount,
+                'memo': memo
+            }]]);
+        }
+        document.getElementById("privateResetButton").click();
+    }
+
+    // set default tab
+    document.getElementById("historyTab").click();
+</script>
+
 </html>
