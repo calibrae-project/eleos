@@ -21,22 +21,22 @@
     "dat": "^13.10.0",
     "electron-packager": "^8.7.2",
     "errors": "^0.3.0",
-    "express": "^4.16.2",
+    "express": "^4.16.3",
     "express-ws": "^3.0.0",
     "ht-auth": "^0.1.0",
     "http-auth": "^3.2.3",
     "node-gyp": "^3.6.2",
     "node-pty": "^0.6.10",
-    "request": "^2.83.0",
+    "request": "^2.85.0",
     "request-progress": "^3.0.0",
     "tableify": "^1.1.0",
     "tar-fs": "^1.16.0",
     "tcp-port-used": "^0.1.2",
-    "typescript": "^2.7.2",
+    "typescript": "^2.8.1",
     "xterm": "^2.9.2"
   },
   "devDependencies": {
-    "electron": "^1.8.3",
+    "electron": "2.0.0-beta.7",
     "electron-rebuild": "^1.7.3",
     "flow-bin": "^0.47.0"
   }
